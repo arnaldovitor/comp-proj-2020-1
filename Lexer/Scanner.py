@@ -16,6 +16,7 @@ class Scanner:
     def scan(self):
         self.scanTokens()
         self.tokens.append(Token('END', '', self.line))
+        self.ReservedToken()
         return self.tokens
 
     def scanTokens(self):
@@ -110,3 +111,28 @@ class Scanner:
             return self.program[self.current]
         else:
             return '\0'
+
+    def ReservedToken(self):
+        for token in self.tokens:
+            if(token.lexeme == "INTEGER"):
+                token.type = "INTEGER"
+            elif(token.lexeme == "BOOLEAN" or token.lexeme == "True" or token.lexeme == "False" ):
+                token.type = "BOOLEAN"
+            elif(token.lexeme == "return"):
+                token.type = "RETURN"
+            elif(token.lexeme == "if"):
+                token.type = "IF"
+            elif(token.lexeme == "else"):
+                token.type = "ELSE"
+            elif(token.lexeme == "while"):
+                token.type = "WHILE"
+            elif(token.lexeme == "break"):
+                token.type = "BREAK"
+            elif(token.lexeme == "function"):
+                token.type = "FUNCTION"
+            elif(token.lexeme == "procedure"):
+                token.type = "PROCEDURE"
+            elif(token.lexeme == "continue"):
+                token.type = "CONTINUE"
+            elif(token.lexeme == "print"):
+                token.type = "PRINT"
