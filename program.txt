@@ -1,0 +1,7 @@
+INTEGER x = 5;
+BOOLEAN y = True;
+
+function INTEGER plus(INTEGER a, INTEGER b){
+    INTEGER c = INTEGER a + INTEGER b
+    return INTEGER c;
+}
