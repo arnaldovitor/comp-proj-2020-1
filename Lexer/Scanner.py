@@ -16,7 +16,7 @@ class Scanner:
     def scan(self):
         self.scanTokens()
         self.tokens.append(Token('END', '', self.line))
-        self.ReservedToken()
+        self.reservedToken()
         return self.tokens
 
     def scanTokens(self):
@@ -112,7 +112,7 @@ class Scanner:
         else:
             return '\0'
 
-    def ReservedToken(self):
+    def reservedToken(self):
         for token in self.tokens:
             if(token.lexeme == "INTEGER"):
                 token.type = "INTEGER"
