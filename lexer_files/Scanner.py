@@ -1,4 +1,4 @@
-from Lexer.Token import Token
+from lexer_files.Token import Token
 
 
 class Scanner:

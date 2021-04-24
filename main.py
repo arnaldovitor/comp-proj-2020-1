@@ -1,5 +1,6 @@
 import sys
-from Lexer.Scanner import Scanner
+from lexer_files.Scanner import Scanner
+from parser_files.Parser import Parser
 
 if __name__ == "__main__":
     try:
@@ -13,3 +14,6 @@ if __name__ == "__main__":
 
     for i in tableTokens:
         print(i)
+
+    parser = Parser(tableTokens)
+    parser.start()
