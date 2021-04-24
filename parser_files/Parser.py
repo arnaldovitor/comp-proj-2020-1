@@ -13,24 +13,24 @@ class Parser():
         return self.tokens[self.current + 1]
 
     def start(self):
-        self.statement_list()
+        self.statementList()
         return
 
-    def statement_list(self):
+    def statementList(self):
         if self.getCurrentToken().type == "END":
             return
         else:
             self.statement()
-            self.statement_list()
+            self.statementList()
             return
 
     def statement(self):
         if self.getCurrentToken().type == "INTEGER" or self.getCurrentToken().type == "BOOLEAN":
-            self.var_statement()
+            self.varStatement()
             return
 
     # análise sintática para cadeia de tokens que começam com INTEGER ou BOOLEAN
-    def var_statement(self):
+    def varStatement(self):
         self.current += 1
         if self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower():
             self.current += 1
@@ -38,7 +38,7 @@ class Parser():
                 self.current += 1
                 self.checkExpression()
                 if self.getCurrentToken().type == "SEMICOLON":
-                    self.current+=1
+                    self.current += 1
                     return
                 else:
                     self.error = True
