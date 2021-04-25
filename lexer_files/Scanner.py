@@ -118,21 +118,21 @@ class Scanner:
                 token.type = "INTEGER"
             elif(token.lexeme == "BOOLEAN" or token.lexeme == "True" or token.lexeme == "False" ):
                 token.type = "BOOLEAN"
-            elif(token.lexeme == "return"):
+            elif(token.lexeme == "RETURN"):
                 token.type = "RETURN"
-            elif(token.lexeme == "if"):
+            elif(token.lexeme == "IF"):
                 token.type = "IF"
-            elif(token.lexeme == "else"):
+            elif(token.lexeme == "ELSE"):
                 token.type = "ELSE"
-            elif(token.lexeme == "while"):
+            elif(token.lexeme == "WHILE"):
                 token.type = "WHILE"
-            elif(token.lexeme == "break"):
+            elif(token.lexeme == "BREAK"):
                 token.type = "BREAK"
-            elif(token.lexeme == "function"):
+            elif(token.lexeme == "FUNCTION"):
                 token.type = "FUNCTION"
-            elif(token.lexeme == "procedure"):
+            elif(token.lexeme == "PROCEDURE"):
                 token.type = "PROCEDURE"
-            elif(token.lexeme == "continue"):
+            elif(token.lexeme == "CONTINUE"):
                 token.type = "CONTINUE"
-            elif(token.lexeme == "print"):
+            elif(token.lexeme == "PRINT"):
                 token.type = "PRINT"

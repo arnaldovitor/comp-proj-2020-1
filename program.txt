@@ -1,7 +1,6 @@
-INTEGER x = 5;
-BOOLEAN y = True;
-
-function INTEGER plus(INTEGER a, INTEGER b){
-    INTEGER c = INTEGER a + INTEGER b
-    return INTEGER c;
+FUNCTION PROGRAMA(INTEGER valor, INTEGER value){
+	INTEGER variavel = valor+value;
+	RETURN variavel;
 }
+PROGRAMA(1,3);
+PRINT(1);
