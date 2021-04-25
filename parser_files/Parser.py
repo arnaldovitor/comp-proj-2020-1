@@ -5,6 +5,7 @@ class Parser():
         self.current = 0
         self.tokens = tokens
         self.error = False
+        self.flag = 0
 
     def getCurrentToken(self):
         return self.tokens[self.current]
@@ -25,12 +26,15 @@ class Parser():
             return
 
     def statement(self):
-        systemCalls = ["IF", "WHILE", "PRINT"]
+        systemCalls = ["IF", "WHILE", "PRINT","RETURN"]
         if self.getCurrentToken().type == "INTEGER" or self.getCurrentToken().type == "BOOLEAN":
             self.varStatement()
             return
         elif self.getCurrentToken().type == "FUNCTION":
             self.funcStatement()
+            return
+        elif self.getCurrentToken().type == "PROCEDURE":
+            self.procStatement()
             return
         elif self.getCurrentToken().type == "LETTER":
             self.callStatement()
@@ -58,7 +62,7 @@ class Parser():
                 raise Exception('Syntatic error (expecting = in variable declaration) in line {}'.format(self.getCurrentToken().line))
         else:
             self.error = True
-            raise Exception('Syntatic error (expecting a variable name) in line {}'.formart(self.getCurrentToken().line))
+            raise Exception('Syntatic error (expecting a variable name) in line {}'.format(self.getCurrentToken().line))
 
     # análise sintática para expressões lógicas ou aritméticas
     def checkExpression(self):
@@ -82,7 +86,7 @@ class Parser():
                 # casos que tem expressões lógicas
                 self.current += 1
                 # passa para casos como num > num
-                if self.getLookAheadToken().type == "NUMBER":
+                if self.getLookAheadToken().type == "NUM":
                     pass
                 # passa para casos como num > var
                 elif self.getLookAheadToken().type == "LETTER":
@@ -167,10 +171,10 @@ class Parser():
 
     # análise sintática de escopo
     def scopoStatement(self):
-        total = ["SEMICOLON", "LETTER", "IF", "WHILE", "PRINT", "INTEGER", "BOOLEAN"]
+        total = ["SEMICOLON", "LETTER", "IF", "WHILE", "PRINT", "INTEGER", "BOOLEAN","RETURN"]
         parameters = ["INTEGER", "BOOLEAN", "LETTER"]
-        systemCalls = ["IF", "WHILE", "PRINT"]
-        while self.getLookAheadToken().type in total:
+        systemCalls = ["IF", "WHILE", "PRINT","RETURN"]
+        while self.getCurrentToken().type in total:
             if self.getCurrentToken().type in systemCalls:
                 self.systemCallStatement()
             elif self.getCurrentToken().type in parameters:
@@ -186,6 +190,7 @@ class Parser():
 
     # análise sintática para funções
     def funcStatement(self):
+        self.flag = 1
         parameters = ["INTEGER", "BOOLEAN", "COMMA", "LETTER"]
         if self.getCurrentToken().type == "FUNCTION":
             self.current += 1
@@ -193,31 +198,33 @@ class Parser():
                 self.current += 1
                 if self.getCurrentToken().type == "POPEN":
                     self.current += 1
+                    line = self.getCurrentToken().line
                     while self.getCurrentToken().type != "PCLOSE":
-                        if self.getCurrentToken().type in parameters:
-                            self.current += 1
+                        if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
+                            raise Exception('Syntatic error (expecting paranteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
+                        elif self.getCurrentToken().type in parameters:
+                            if self.getCurrentToken().type == "LETTER" and self.getCurrentToken.lexeme.islower() == False:
+                                raise Exception ('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
+                            else:
+                                self.current += 1
                         else:
                             raise Exception('Syntatic error (invalid function parameter) in line {}'.format(self.getCurrentToken().line))
                     self.current += 1
                     if self.getCurrentToken().type == "BOPEN":
                         self.current += 1
-                        if self.getCurrentToken().type != "RETURN":
+                        if self.getCurrentToken().type != "BCLOSE":
                             self.scopoStatement()
+                        if self.flag == 1:
+                            raise Exception('Syntatic error (function without return) in line {}'.format(self.getCurrentToken().line))
+                        if self.getCurrentToken().type == "BCLOSE":
                             self.current += 1
-                        self.current += 1
-                        if self.getCurrentToken().type in parameters:
-                            self.current += 1
-                            if self.getCurrentToken().type == "BCLOSE":
-                                self.current += 1
-                                return
-                            else:
-                                raise Exception('Syntatic error (expecting } at the end of the function scope) in line {}'.format(self.getCurrentToken().line))
+                            return
                         else:
-                            raise Exception('Syntatic error (invalid return of function) in line {}'.format(self.getCurrentToken().line))
+                            raise Exception('Syntatic error (expecting bracket at the end of the function scope) in line {}'.format(self.getCurrentToken().line))
                     else:
-                        raise Exception('Syntatic error (expecting { after parameters definition) in line {}'.format(self.getCurrentToken().line))
+                        raise Exception('Syntatic error (expecting bracket after parameters definition) in line {}'.format(self.getCurrentToken().line))
                 else:
-                    raise Exception('Syntatic error (expecting ( after function label) in line {}'.format(self.getCurrentToken().line))
+                    raise Exception('Syntatic error (expecting parenteses after function label) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (function label must be in upper letters) in line {}'.format(self.getCurrentToken().line))
         else:
@@ -225,29 +232,38 @@ class Parser():
 
     # análise sintática para procedimentos
     def procStatement(self):
-        parameters = ["INTEGER", "BOOLEAN", "COMMA", "LETTER"]
+        parameters = ["INTEGER", "BOOLEAN", "LETTER", "COMMA"]
         if self.getCurrentToken().type == "PROCEDURE":
             self.current += 1
             if str(self.getCurrentToken().lexeme).isupper() == True:
                 self.current += 1
                 if self.getCurrentToken().type == "POPEN":
                     self.current += 1
+                    line = self.getCurrentToken().line
                     while self.getCurrentToken().type != "PCLOSE":
-                        if self.getCurrentToken().type in parameters:
-                            self.current += 1
+                        if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
+                            raise Exception('Syntatic error (expecting parenteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
+                        elif self.getCurrentToken().type in parameters:
+                            if self.getCurrentToken().type == "LETTER" and self.getCurrentToken.lexeme.islower() == False:
+                                raise Exception ('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
+                            else:
+                                self.current += 1
                         else:
                             raise Exception('Syntatic error (invalid procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.current += 1
                     if self.getCurrentToken().type == "BOPEN":
+                        
                         self.current += 1
-                        if self.getCurrentToken().type != "BCLOSE":
-                            self.scopoStatement()
+                        self.scopoStatement()
+                        if(self.getCurrentToken().type == "BCLOSE"):
                             self.current += 1
-                        self.current += 1
+                            return
+                        else:
+                            raise Exception('Syntatic error (expecting bracket at the end of procedure scope) in lin {}'.format(self.getCurrentToken().line))
                     else:
-                        raise Exception('Syntatic error (expecting { after parameters definition) in line {}'.format(self.getCurrentToken().line))
+                        raise Exception('Syntatic error (expecting bracket after parameters definition) in line {}'.format(self.getCurrentToken().line))
                 else:
-                    raise Exception('Syntatic error (expecting ( after procedure label) in line {}'.format(self.getCurrentToken().line))
+                    raise Exception('Syntatic error (expecting parenteses after procedure label) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (procedure label must be in upper letters) in line {}'.format(self.getCurrentToken().line))
         else:
@@ -260,30 +276,42 @@ class Parser():
             self.current += 1
             if self.getCurrentToken().type == "POPEN":
                 self.current += 1
+                line = self.getCurrentToken().line
                 while self.getCurrentToken().type != "PCLOSE":
-                    if self.getCurrentToken().type in parameters:
-                        self.current += 1
+                    if self.getCurrentToken().line != line or self.getCurrentToken().type == "SEMICOLON" or self.getCurrentToken().type == "END":
+                        raise Exception('Syntatic error (expecting parenteses after parameters scope) in line {}'.format(self.getCurrentToken().line))
+                    elif self.getCurrentToken().type in parameters:
+                        if (self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower() == False):
+                            raise Exception ('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
+                        else:
+                            self.current += 1
                     else:
                         raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
                 self.current += 1
                 if self.getCurrentToken().type == "SEMICOLON":
                     self.current += 1
                 else:
-                    raise Exception('Syntatic error (expecting ; at the end of fucntion or procedure call) in line {}'.format(self.getCurrentToken.line))
+                    raise Exception('Syntatic error (expecting ; at the end of fucntion or procedure call) in line {}'.format(self.getCurrentToken().line))
             else:
-                raise Exception('Syntac error (expecting ( after function or procedure label) in line {}'.format(self.getCurrentToken().line))
+                raise Exception('Syntac error (expecting parenteses after function or procedure label) in line {}'.format(self.getCurrentToken().line))
         else:
             raise Exception('Syntatic error (unexpect argument for function or procedure call) in line {}'.format(self.getCurrentToken().line))
 
     # análise sintática para chamadas de sistema
     def systemCallStatement(self):
+        print(self.getCurrentToken())
         parameters = ["INTEGER", "BOOLEAN", "COMMA", "LETTER", "NUM"]
+        cant = ["SEMICOLON","END","BOPEN","BCLOSE"]
         if self.getCurrentToken().type == "IF":
             self.current+=1
             if self.getCurrentToken().type == "POPEN":
                 self.current += 1
+                line = self.getCurrentToken().line
                 while self.getCurrentToken().type != "PCLOSE":
-                    self.checkExpression()
+                    if self.getCurrentToken().line != line or self.getCurrentToken().type in cant:
+                        raise Exception ('Syntatic error (expecting parenteses after parameters scope) in line {}'.format(self.getCurrentToken().line))
+                    else:
+                        self.checkExpression()
                 self.current += 1
                 if self.getCurrentToken().type == "BOPEN":
                     self.current += 1
@@ -354,5 +382,31 @@ class Parser():
                     raise Exception('Syntatic error (expecting ; after PRINT call) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (expecting ( after PRINT) in line {}'.format(self.getCurrentToken().line))
+
+        elif self.getCurrentToken().type == "RETURN":
+            self.current += 1
+            parameters = ["INTEGER","BOOLEAN", "LETTER","NUM"]
+            if self.getCurrentToken().type in parameters:
+                if self.getCurrentToken().type == "LETTER":
+                    if self.getCurrentToken().lexeme.islower() == False:
+                        raise Exception ('Syntatic error (invalid argument for RETURN) in line {}'.format(self.getCurrentToken().line))
+                    else:
+                        self.current+=1
+                        if self.getCurrentToken().type == "SEMICOLON":
+                            self.current += 1
+                            self.flag = 0
+                            return
+                        else:
+                            raise Exception ('Syntatic error (expecting ; but recieved invalid argument) in line {}'.format(self.getCurrentToken().line))
+                else:
+                    self.current+=1
+                    if self.getCurrentToken().type == "SEMICOLON":
+                        self.current += 1
+                        self.flag = 0
+                        return
+                    else:
+                        raise Exception ('Syntatic error (expecting ; but recieved invalid argument) in line {}'.format(self.getCurrentToken().line))
+            else:
+                raise Exception ('Syntatic error (invalid type as return) in line {}'.format(self.getCurrentToken().line))
         else:
             raise Exception('Syntatic error (unexpect argument of system call) in line {}'.format(self.getCurrentToken().line))
