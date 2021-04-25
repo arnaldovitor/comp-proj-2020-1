@@ -1,3 +1,1 @@
-IF(3<4){
-	PRINT(1);
-}
+INTEGER variavel = 1<1
