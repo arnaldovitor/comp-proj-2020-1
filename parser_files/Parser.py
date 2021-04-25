@@ -87,6 +87,8 @@ class Parser():
                 self.current += 1
                 # passa para casos como num > num
                 if self.getLookAheadToken().type == "NUM":
+                    self.current += 1
+                    print("?")
                     pass
                 # passa para casos como num > var
                 elif self.getLookAheadToken().type == "LETTER":
@@ -328,16 +330,16 @@ class Parser():
                                     self.current += 1
                                     return
                                 else:
-                                    raise Exception('Syntatic error (expecting } after ELSE scope) in line {}'.format(self.getCurrentToken().line))
+                                    raise Exception('Syntatic error (expecting brackets after ELSE scope) in line {}'.format(self.getCurrentToken().line))
 
                             else:
-                                raise Exception('Syntatic error (expecting { after ELSE) in line {}'.format(self.getCurrentToken().line))
+                                raise Exception('Syntatic error (expecting brackets after ELSE) in line {}'.format(self.getCurrentToken().line))
                         else:
                             return
                     else:
-                        raise Exception('Syntatic error (expecting } after IF scope) in line {}'.format(self.getCurrentToken().line))
+                        raise Exception('Syntatic error (expecting brackets after IF scope) in line {}'.format(self.getCurrentToken().line))
                 else:
-                    raise Exception('Syntatic error (expecting { after IF condition) in line {}'.format(self.getCurrentToken().line))
+                    raise Exception('Syntatic error (expecting brackets after IF condition) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (expecting ( after IF call) in line {}'.format(self.getCurrentToken().line))
             return
@@ -356,9 +358,9 @@ class Parser():
                     if self.getCurrentToken().type == "BCLOSE":
                         self.current += 1
                     else:
-                        raise Exception('Syntatic error (expecting } after WHILE scope) in line {}'.format(self.getCurrentToken().line))
+                        raise Exception('Syntatic error (expecting brackets after WHILE scope) in line {}'.format(self.getCurrentToken().line))
                 else:
-                    raise Exception('Syntatic error (expecting { after WHILE condition) in line {}'.format(self.getCurrentToken().line))
+                    raise Exception('Syntatic error (expecting brackets after WHILE condition) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (expecting ( after WHILE call) in line {}'.format(self.getCurrentToken().line))
             return
