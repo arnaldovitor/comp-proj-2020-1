@@ -35,7 +35,7 @@ class Scanner:
             elif char == '+' or char == '-' or char == '*' or char == '/':
                 self.tokens.append(self.scanArithmeticToken(char))
             # verifica os tokens "=", ==", "!=", "<", "<=", ">", ">="
-            elif char == '=' or char == '==' or char == '!=' or char == '<' or char == '<=' or char == '>' or char == '>=':
+            elif char == '=' or char == '!' or char == '<'  or char == '>' :
                 self.tokens.append(self.scanBooleanToken(char))
             # veerifica os tokens "," e ";"
             elif char == ',' or char == ';':
@@ -74,18 +74,22 @@ class Scanner:
     def scanBooleanToken(self, char):
         if char == '=':
             if self.lookAhead() == '=':
+                self.current += 1
                 return Token('EQUAL', self.program[self.start:self.current], self.line)
             else:
                 return Token('ATTR', self.program[self.start:self.current], self.line)
         elif char == '!' and self.lookAhead() == '=':
+            self.current += 1
             return Token('DIFF', self.program[self.start:self.current], self.line)
         elif char == '<':
             if self.lookAhead() == '=':
+                self.current += 1
                 return Token('LESSEQUAL', self.program[self.start:self.current], self.line)
             else:
                 return Token('LESS', self.program[self.start:self.current], self.line)
         elif char == '>':
             if self.lookAhead() == '=':
+                self.current += 1
                 return Token('GREATEREQUAL', self.program[self.start:self.current], self.line)
             else:
                 return Token('GREATER', self.program[self.start:self.current], self.line)

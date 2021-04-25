@@ -36,12 +36,14 @@ class Parser():
         elif self.getCurrentToken().type == "PROCEDURE":
             self.procStatement()
             return
-        elif self.getCurrentToken().type == "LETTER":
+        elif self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.isupper() == True:
             self.callStatement()
             return
         elif self.getCurrentToken().type in systemCalls:
             self.systemCallStatement()
             return
+        else:
+            raise Exception('Syntatic error (variable initialized without type) in line{}'.format(self.getCurrentToken().line))
 
     # análise sintática para cadeia de tokens que começam com INTEGER ou BOOLEAN
     def varStatement(self):
@@ -50,10 +52,14 @@ class Parser():
             self.current += 1
             if self.getCurrentToken().type == "ATTR":
                 self.current += 1
+                line = self.getCurrentToken().line
                 self.checkExpression()
                 if self.getCurrentToken().type == "SEMICOLON":
                     self.current += 1
                     return
+                elif self.getCurrentToken().line == line and self.getCurrentToken().type != "END":
+                    self.error = True
+                    raise Exception('Syntatic error (expressions must be at most between two operands) in line{}'.format(self.getCurrentToken().line)) 
                 else:
                     self.error = True
                     raise Exception('Syntatic error (expecting ; after variable declaration) in line {}'.format(self.getCurrentToken().line))
@@ -88,15 +94,14 @@ class Parser():
                 # passa para casos como num > num
                 if self.getLookAheadToken().type == "NUM":
                     self.current += 1
-                    print("?")
                     pass
                 # passa para casos como num > var
                 elif self.getLookAheadToken().type == "LETTER":
-                    if self.getLookAheadToken().lexema.islower():
+                    if self.getLookAheadToken().lexeme.islower():
                         self.current += 2
                         return
                     # passa para casos como num > function()
-                    elif self.getLookAheadToken().lexema.isupper():
+                    elif self.getLookAheadToken().lexeme.isupper():
                         self.current += 2
                         if self.getCurrentToken().type == "POPEN":
                             self.current += 1
@@ -199,8 +204,8 @@ class Parser():
             if str(self.getCurrentToken().lexeme).isupper() == True:
                 self.current += 1
                 if self.getCurrentToken().type == "POPEN":
-                    self.current += 1
                     line = self.getCurrentToken().line
+                    self.current += 1
                     while self.getCurrentToken().type != "PCLOSE":
                         if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
                             raise Exception('Syntatic error (expecting paranteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
@@ -240,8 +245,8 @@ class Parser():
             if str(self.getCurrentToken().lexeme).isupper() == True:
                 self.current += 1
                 if self.getCurrentToken().type == "POPEN":
-                    self.current += 1
                     line = self.getCurrentToken().line
+                    self.current += 1
                     while self.getCurrentToken().type != "PCLOSE":
                         if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
                             raise Exception('Syntatic error (expecting parenteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
@@ -277,8 +282,8 @@ class Parser():
         if self.getCurrentToken().type == "LETTER":
             self.current += 1
             if self.getCurrentToken().type == "POPEN":
-                self.current += 1
                 line = self.getCurrentToken().line
+                self.current += 1
                 while self.getCurrentToken().type != "PCLOSE":
                     if self.getCurrentToken().line != line or self.getCurrentToken().type == "SEMICOLON" or self.getCurrentToken().type == "END":
                         raise Exception('Syntatic error (expecting parenteses after parameters scope) in line {}'.format(self.getCurrentToken().line))
@@ -301,14 +306,13 @@ class Parser():
 
     # análise sintática para chamadas de sistema
     def systemCallStatement(self):
-        print(self.getCurrentToken())
         parameters = ["INTEGER", "BOOLEAN", "COMMA", "LETTER", "NUM"]
         cant = ["SEMICOLON","END","BOPEN","BCLOSE"]
         if self.getCurrentToken().type == "IF":
             self.current+=1
             if self.getCurrentToken().type == "POPEN":
-                self.current += 1
                 line = self.getCurrentToken().line
+                self.current += 1
                 while self.getCurrentToken().type != "PCLOSE":
                     if self.getCurrentToken().line != line or self.getCurrentToken().type in cant:
                         raise Exception ('Syntatic error (expecting parenteses after parameters scope) in line {}'.format(self.getCurrentToken().line))
@@ -316,16 +320,14 @@ class Parser():
                         self.checkExpression()
                 self.current += 1
                 if self.getCurrentToken().type == "BOPEN":
-                    self.current += 1
+                    self.current+=1
                     self.scopoStatement()
-                    self.current += 1
                     if self.getCurrentToken().type == "BCLOSE":
                         if self.getLookAheadToken().type == "ELSE":
                             self.current += 2
                             if self.getCurrentToken().type == "BOPEN":
                                 self.current += 1
                                 self.scopoStatement()
-                                self.current += 1
                                 if self.getCurrentToken().type == "BCLOSE":
                                     self.current += 1
                                     return
@@ -335,26 +337,29 @@ class Parser():
                             else:
                                 raise Exception('Syntatic error (expecting brackets after ELSE) in line {}'.format(self.getCurrentToken().line))
                         else:
+                            self.current+=1
                             return
                     else:
                         raise Exception('Syntatic error (expecting brackets after IF scope) in line {}'.format(self.getCurrentToken().line))
                 else:
                     raise Exception('Syntatic error (expecting brackets after IF condition) in line {}'.format(self.getCurrentToken().line))
             else:
-                raise Exception('Syntatic error (expecting ( after IF call) in line {}'.format(self.getCurrentToken().line))
+                raise Exception('Syntatic error (expecting parenteses after IF call) in line {}'.format(self.getCurrentToken().line))
             return
 
         elif self.getCurrentToken().type == "WHILE":
             self.current += 1
             if self.getCurrentToken().type == "POPEN":
+                line = self.getCurrentToken().line
                 self.current += 1
                 while self.getCurrentToken().type != "PCLOSE":
+                    if self.getCurrentToken().line != line or self.getCurrentToken().type in cant:
+                        raise Exception ('Syntatic error (expecting paranteses after WHILE condition) in line {}'.format(self.getCurrentToken().line))
                     self.checkExpression()
                 self.current += 1
                 if self.getCurrentToken().type == "BOPEN":
                     self.current += 1
                     self.scopoStatement()
-                    self.current += 1
                     if self.getCurrentToken().type == "BCLOSE":
                         self.current += 1
                     else:
@@ -362,15 +367,18 @@ class Parser():
                 else:
                     raise Exception('Syntatic error (expecting brackets after WHILE condition) in line {}'.format(self.getCurrentToken().line))
             else:
-                raise Exception('Syntatic error (expecting ( after WHILE call) in line {}'.format(self.getCurrentToken().line))
+                raise Exception('Syntatic error (expecting parenteses after WHILE call) in line {}'.format(self.getCurrentToken().line))
             return
 
         elif self.getCurrentToken().type == "PRINT":
             self.current += 1
             if self.getCurrentToken().type == "POPEN":
+                line = self.getCurrentToken().line
                 self.current += 1
                 while self.getCurrentToken().type != "PCLOSE":
-                    if self.getCurrentToken().type in parameters:
+                    if self.getCurrentToken().line != line or self.getCurrentToken().type in cant:
+                        raise Exception ('Syntatic error (expecting paranteses after PRINT statements) in line {}'.formar(self.getCurrentToken().line))
+                    elif self.getCurrentToken().type in parameters:
                         if self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.isupper() == True:
                             self.callStatement()
                         else:
