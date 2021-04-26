@@ -56,7 +56,6 @@ class Parser():
                 self.current += 1
                 line = self.getCurrentToken().line
                 self.checkExpression()
-                print(self.getCurrentToken())
                 if self.getCurrentToken().type == "SEMICOLON":
                     self.current += 1
                     return
@@ -235,7 +234,7 @@ class Parser():
                                 'Syntatic error (expecting paranteses after parameters definition) in line {}'.format(
                                     self.getCurrentToken().line))
                         elif self.getCurrentToken().type in parameters:
-                            if self.getCurrentToken().type == "LETTER" and self.getCurrentToken.lexeme.islower() == False:
+                            if self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower() == False:
                                 raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(
                                     self.getCurrentToken().line))
                             else:
