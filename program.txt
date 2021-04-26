@@ -1,1 +1,11 @@
-INTEGER variavel = 1<1
+FUNCTION PROGRAMA(INTEGER valor){
+	IF(valor==0){
+		INTEGER auxiliar = 0;
+	}
+	ELSE{
+		INTEGER auxiliar = valor*valor;
+	}
+	RETURN auxiliar;
+}
+INTEGER carambola = PROGRAMA(1);
+PRINT(carambola);
