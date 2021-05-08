@@ -3,7 +3,7 @@ from lexer_files.Token import Token
 
 class Scanner:
     def __init__(self, program):
-        self. tokens = []
+        self.tokens = []
         self.current = 0
         self.start = 0
         self.line = 1
