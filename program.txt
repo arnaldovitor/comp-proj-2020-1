@@ -1,4 +1,4 @@
-FUNCTION PROGRAMA(INTEGER valor){
+FUNCTION POTENCIA(INTEGER valor){
 	IF(valor==0){
 		INTEGER auxiliar = 0;
 	}
@@ -7,5 +7,9 @@ FUNCTION PROGRAMA(INTEGER valor){
 	}
 	RETURN auxiliar;
 }
+PROCEDURE DIVIDIREPRINTAR(INTEGER valor){
+	INTEGER auxiliar = valor/2;
+	PRINT(auxiliar);
+}
 INTEGER carambola = PROGRAMA(1);
-PRINT(carambola);
+DIVIDIREPRINTAR(carambola);
