@@ -1,3 +1,4 @@
+#classe token, e seus atributos tipo, lexema (palavra em si) e a linha onde se encontra
 class Token:
     def __init__(self, type, lexeme, line):
         self.type = type
