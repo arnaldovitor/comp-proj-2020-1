@@ -1,6 +1,5 @@
 from lexer_files.Token import Token
 
-
 class Scanner:
     def __init__(self, program):
         self.tokens = []
@@ -9,23 +8,29 @@ class Scanner:
         self.line = 1
         self.program = program
 
+    #função para acessar próximo token
     def nextChar(self):
         self.current += 1
         return self.program[self.current - 1]
 
+    #Lê a entrada, acrescenta o END ao final da mesma
     def scan(self):
         self.scanTokens()
         self.tokens.append(Token('END', '', self.line))
         self.reservedToken()
         return self.tokens
 
+    #lê o arquivo e separa cada token
     def scanTokens(self):
+        #percorrer até o final da palavra
         while self.current != len(self.program):
             self.start = self.current
             char = self.nextChar()
 
+            #pular espaços em branco
             if char == ' ' or char == '\t' or char == '\r':
                 pass
+            #pular quebra de linha
             elif char == '\n':
                 self.line += 1
             # verifica os tokens "(",")","{","}"
