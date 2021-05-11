@@ -189,7 +189,7 @@ class Parser():
 
     # análise sintática de escopo
     def scopoStatement(self, tipo):
-        total = ["SEMICOLON", "LETTER", "IF", "WHILE", "PRINT", "INTEGER", "BOOLEAN", "RETURN"]
+        total = ["SEMICOLON", "LETTER", "IF", "WHILE", "PRINT", "INTEGER", "BOOLEAN", "RETURN", "BREAK", "CONTINUE"]
         parameters = ["INTEGER", "BOOLEAN", "LETTER"]
         systemCalls = ["IF", "WHILE", "PRINT", "RETURN"]
         
@@ -217,6 +217,11 @@ class Parser():
             #Validação de ; para fechar linha
             elif self.getCurrentToken().type == "SEMICOLON":
                 self.current += 1
+            elif (self.getCurrentToken().type == "BREAK" or self.getCurrentToken().type == "CONTINUE") and tipo == 2:
+                if self.getLookAheadToken() == "SEMICOLON":
+                    self.current += 1
+                else:
+                    raise Exception('Syntatic error (expecting semicolon after break or continue statement) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (unexpect argument in scopo) in line {}'.format(self.getCurrentToken().line))
 
@@ -402,7 +407,7 @@ class Parser():
                 if self.getCurrentToken().type == "BOPEN":
                     self.current += 1
                     #Declaração do escopo do IF
-                    self.scopoStatement()
+                    self.scopoStatement(1)
                     #Declaração de encerramento do IF
                     if self.getCurrentToken().type == "BCLOSE":
                         #Declaração de IF e ELSE
@@ -411,7 +416,7 @@ class Parser():
                             #Declaração do escopo do ELSE
                             if self.getCurrentToken().type == "BOPEN":
                                 self.current += 1
-                                self.scopoStatement()
+                                self.scopoStatement(1)
                                 #Declaração do encerramento do ELSE
                                 if self.getCurrentToken().type == "BCLOSE":
                                     self.current += 1
@@ -458,7 +463,9 @@ class Parser():
                 #Declaração do escopo do WHILE
                 if self.getCurrentToken().type == "BOPEN":
                     self.current += 1
-                    self.scopoStatement()
+                    self.scopoStatement(2)
+                    if self.getCurrentToken().type == "BREAK" or self.getCurrentToken().type == "CONTINUE":
+                        self.current+=1
                     #Declaração de termino do WHILE
                     if self.getCurrentToken().type == "BCLOSE":
                         self.current += 1
