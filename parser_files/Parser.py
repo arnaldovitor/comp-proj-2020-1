@@ -120,7 +120,7 @@ class Parser():
                             self.current += 1
                             #Leitura de todos os parametros das função
                             while self.getCurrentToken().type != "PCLOSE":
-                                if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getLookAheadToken().lexema.islower():
+                                if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().lexeme.islower():
                                     self.current += 1
                                     #Existência de vírgulas separando os paramêtros
                                     if self.getCurrentToken().type == "COMMA":
@@ -174,8 +174,13 @@ class Parser():
             elif self.getCurrentToken().lexeme.islower():
                 #confere a atribuição de operação
                 if hasLogicSymbol(self.getLookAheadToken()) or hasArithmeticSymbol(self.getLookAheadToken()):
-                    self.current += 3
-                    return
+                    print(self.getCurrentToken())
+                    self.current += 2
+                    if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().lexeme.islower():
+                        self.current += 1
+                        return
+                    else:
+                        raise Exception('Syntatic error (incomplete logic/arithmetic expression) in line {}'.format(self.getCurrentToken().line))
                 else:
                     raise Exception('Syntatic error (incomplete logic expression) in line {}'.format(self.getCurrentToken().line))
             else:
