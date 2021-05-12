@@ -204,7 +204,7 @@ class Parser():
         while self.getCurrentToken().type in total:
             #Declaração de System call
             if self.getCurrentToken().type in systemCalls:
-                if(tipo == 0):
+                if(tipo == 0 or tipo == 2):
                     self.systemCallStatement()
                 elif(tipo == 1):
                     if(self.getCurrentToken().type == "RETURN"):
@@ -223,7 +223,7 @@ class Parser():
             elif self.getCurrentToken().type == "SEMICOLON":
                 self.current += 1
             elif (self.getCurrentToken().type == "BREAK" or self.getCurrentToken().type == "CONTINUE") and tipo == 2:
-                if self.getLookAheadToken() == "SEMICOLON":
+                if self.getLookAheadToken().type == "SEMICOLON":
                     self.current += 1
                 else:
                     raise Exception('Syntatic error (expecting semicolon after break or continue statement) in line {}'.format(self.getCurrentToken().line))
@@ -470,7 +470,10 @@ class Parser():
                     self.current += 1
                     self.scopoStatement(2)
                     if self.getCurrentToken().type == "BREAK" or self.getCurrentToken().type == "CONTINUE":
-                        self.current+=1
+                        if(self.getLookAheadToken().type == "SEMICOLON"):
+                            self.current+=2
+                        else:
+                            raise Exception('Syntatic error (expecting semicolon after a break or continue statement) in line {}'.format(self.getCurrentToken().line))
                     #Declaração de termino do WHILE
                     if self.getCurrentToken().type == "BCLOSE":
                         self.current += 1
@@ -509,6 +512,7 @@ class Parser():
                 #Declaração de ; após o PRINT
                 if self.getCurrentToken().type == "SEMICOLON":
                     self.current += 1
+                    return
                 else:
                     raise Exception('Syntatic error (expecting ; after PRINT call) in line {}'.format(self.getCurrentToken().line))
             else:
