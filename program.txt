@@ -11,5 +11,10 @@ PROCEDURE DIVIDIREPRINTAR(INTEGER valor){
 	INTEGER auxiliar = valor/2;
 	PRINT(auxiliar);
 }
-INTEGER carambola = PROGRAMA(1);
+WHILE(False){
+	PRINT(1);
+	BREAK;
+}
+INTEGER carambola = POTENCIA(1);
+INTEGER carambola = 1+carambola;
 DIVIDIREPRINTAR(carambola);
