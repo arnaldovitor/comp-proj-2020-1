@@ -1,19 +1,25 @@
-FUNCTION POTENCIA(INTEGER valor){
-	IF(valor==0){
+FUNCTION POTENCIA(INTEGER variavel){
+	IF(False){
 		INTEGER auxiliar = 0;
 	}
 	ELSE{
-		INTEGER auxiliar = valor*valor;
+		INTEGER auxiliar = 3*2;
 	}
 	RETURN auxiliar;
 }
-PROCEDURE DIVIDIREPRINTAR(INTEGER valor){
+PROCEDURE DIVIDIREPRINTAR(){
 	INTEGER auxiliar = valor/2;
-	PRINT(auxiliar);
+	PRINT(auxiliar,3,True);
 }
-WHILE(False){
+WHILE(3<5){
+	IF(False){
+		INTEGER auxiliar = 0;
+	}
+	ELSE{
+		INTEGER auxiliar = 3*2;
+	}
 	PRINT(1);
-	BREAK;
+	CONTINUE;
 }
 INTEGER carambola = POTENCIA(1);
 INTEGER carambola = 1+carambola;
