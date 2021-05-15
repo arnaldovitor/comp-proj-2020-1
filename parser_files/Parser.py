@@ -43,7 +43,7 @@ class Parser():
         elif self.getCurrentToken().type == "PROCEDURE":
             self.procStatement()
             return
-        #chamada de funçã ou de processo
+        #chamada de função ou de processo
         elif self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.isupper() == True:
             self.callStatement()
             return
@@ -83,6 +83,7 @@ class Parser():
 
     # análise sintática para expressões lógicas ou aritméticas
     def checkExpression(self):
+        parameters = ["INTEGER", "BOOLEAN","NUM"]
         #Validação de expressões númericas
         if self.getCurrentToken().type == "NUM":
             # passa para declaração simples de integer
@@ -149,24 +150,38 @@ class Parser():
                 self.current += 1
                 #Declaração de parenteses para parametros da função
                 if self.getCurrentToken().type == "POPEN":
+                    line = self.getCurrentToken().line
                     self.current += 1
-                    #Leitura de todos os parametros das função
-                    while self.getCurrentToken() != "PCLOSE":
-                        if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().lexeme.islower():
-                            self.current += 1
-                            #Existência de vírgulas separando os paramêtros
-                            if self.getCurrentToken().type == "COMMA":
-                                self.current += 1
-                                #Fecha parenteses com uma virgula antes (Ex,)
-                                if self.getCurrentToken().type == "PCLOSE":
-                                    raise Exception('Syntatic error (more arguments needed) in line {}'.format(self.getCurrentToken().line))
-                            #Fecha parenteses
-                            elif self.getCurrentToken().type == "PCLOSE":
-                                break
+                    commaflag = False
+                    #Leitura os parametros
+                    while self.getCurrentToken().type != "PCLOSE":
+                        #Parentese para passagem de parametros não foi fechado
+                        if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
+                            raise Exception('Syntatic error (expecting paranteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
+                        #Declaração dos parametros
+                        elif self.getCurrentToken().type in parameters:
+                            #Identifica se há uma chamada de função ou procedure como parametro, que não é permitido
+                            if self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == False:
+                                raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
+                            #Identifica se há um identificador de tipagem para uma variável
+                            elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
+                                self.current += 2
+                                commaflag = True
+                            #Parametro válido
                             else:
-                                raise Exception('Syntatic error (unexpect comma) in line {}'.format(self.getCurrentToken().line))
+                                #Leu um parametro sem que houvesse separação por virgulas
+                                if(commaflag == True):
+                                    raise Exception('Syntatic error (a comma was expected to be between two parameters) in line {}'.format(self.getCurrentToken().line))
+                                self.current += 1
+                                commaflag = True
+                        #Lendo vírgula que separa os parametros
+                        elif self.getCurrentToken().type == "COMMA" and commaflag == True:
+                            if self.getLookAheadToken().type == "PCLOSE":
+                               raise Exception('Syntatic error (expecting an argument after comma) in line{}'.format(self.getCurrentToken().line))
+                            self.current += 1
+                            commaflag = False
                         else:
-                            raise Exception('Syntatic error (invalid argument) in line {}'.format(self.getCurrentToken().line))
+                            raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.current += 1
                 else:
                     raise Exception('Syntatic error (expecting parentheses) in line {}'.format(self.getCurrentToken().line))
@@ -174,7 +189,6 @@ class Parser():
             elif self.getCurrentToken().lexeme.islower():
                 #confere a atribuição de operação
                 if hasLogicSymbol(self.getLookAheadToken()) or hasArithmeticSymbol(self.getLookAheadToken()):
-                    print(self.getCurrentToken())
                     self.current += 2
                     if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().lexeme.islower():
                         self.current += 1
@@ -231,14 +245,14 @@ class Parser():
                 raise Exception('Syntatic error (unexpect argument in scopo) in line {}'.format(self.getCurrentToken().line))
 
         if((self.getCurrentToken().type not in total) and self.getCurrentToken().type != 'BCLOSE'):
-            raise Exception('Syntatic error (unexpect agurment in scopo) in line {}'.format(self.getCurrentToken().line))
+            raise Exception('Syntatic error (unexpect argument in scopo) in line {}'.format(self.getCurrentToken().line))
         return
 
     # análise sintática para funções
     def funcStatement(self):
         self.flag = 1
         #Parametros de uma função só podem ser do tipo inteiro, boolean ou variável
-        parameters = ["INTEGER", "BOOLEAN", "COMMA", "LETTER"]
+        parameters = ["INTEGER", "BOOLEAN"]
         #Declaração de função através de palavra reservada
         if self.getCurrentToken().type == "FUNCTION":
             self.current += 1
@@ -249,7 +263,8 @@ class Parser():
                 if self.getCurrentToken().type == "POPEN":
                     line = self.getCurrentToken().line
                     self.current += 1
-                    #Leitura de todo os parametros da função
+                    commaflag = False
+                    #Leitura os parametros
                     while self.getCurrentToken().type != "PCLOSE":
                         #Parentese para passagem de parametros não foi fechado
                         if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
@@ -257,13 +272,27 @@ class Parser():
                         #Declaração dos parametros
                         elif self.getCurrentToken().type in parameters:
                             #Identifica se há uma chamada de função ou procedure como parametro, que não é permitido
-                            if self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower() == False:
-                                raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
+                            if self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == False:
+                                raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
+                            #Identifica se há um identificador de tipagem para uma variável
+                            elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
+                                self.current += 2
+                                commaflag = True
                             #Parametro válido
                             else:
+                                #Leu um parametro sem que houvesse separação por virgulas
+                                if(commaflag == True):
+                                    raise Exception('Syntatic error (a comma was expected to be between two parameters) in line {}'.format(self.getCurrentToken().line))
                                 self.current += 1
+                                commaflag = True
+                        #Lendo vírgula que separa os parametros
+                        elif self.getCurrentToken().type == "COMMA" and commaflag == True:
+                            if self.getLookAheadToken().type == "PCLOSE":
+                               raise Exception('Syntatic error (expecting an argument after comma) in line{}'.format(self.getCurrentToken().line))
+                            self.current += 1
+                            commaflag = False
                         else:
-                            raise Exception('Syntatic error (invalid function parameter) in line {}'.format(self.getCurrentToken().line))
+                            raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.current += 1
                     #Declaração de {
                     if self.getCurrentToken().type == "BOPEN":
@@ -303,21 +332,36 @@ class Parser():
                 if self.getCurrentToken().type == "POPEN":
                     line = self.getCurrentToken().line
                     self.current += 1
-                    #Leitura de todo os parametros do procedure
+                    commaflag = False
+                    #Leitura os parametros
                     while self.getCurrentToken().type != "PCLOSE":
                         #Parentese para passagem de parametros não foi fechado
                         if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
-                            raise Exception('Syntatic error (expecting parenteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
+                            raise Exception('Syntatic error (expecting paranteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
                         #Declaração dos parametros
                         elif self.getCurrentToken().type in parameters:
                             #Identifica se há uma chamada de função ou procedure como parametro, que não é permitido
-                            if self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower() == False:
-                                raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
+                            if self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == False:
+                                raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
+                            #Identifica se há um identificador de tipagem para uma variável
+                            elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
+                                self.current += 2
+                                commaflag = True
                             #Parametro válido
                             else:
+                                #Leu um parametro sem que houvesse separação por virgulas
+                                if(commaflag == True):
+                                    raise Exception('Syntatic error (a comma was expected to be between two parameters) in line {}'.format(self.getCurrentToken().line))
                                 self.current += 1
+                                commaflag = True
+                        #Lendo vírgula que separa os parametros
+                        elif self.getCurrentToken().type == "COMMA" and commaflag == True:
+                            if self.getLookAheadToken().type == "PCLOSE":
+                               raise Exception('Syntatic error (expecting an argument after comma) in line{}'.format(self.getCurrentToken().line))
+                            self.current += 1
+                            commaflag = False
                         else:
-                            raise Exception('Syntatic error (invalid procedure parameter) in line {}'.format(self.getCurrentToken().line))
+                            raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.current += 1
                     #Declaração de {
                     if self.getCurrentToken().type == "BOPEN":
@@ -352,21 +396,36 @@ class Parser():
                 if self.getCurrentToken().type == "POPEN":
                     line = self.getCurrentToken().line
                     self.current += 1
+                    commaflag = False
                     #Leitura os parametros
                     while self.getCurrentToken().type != "PCLOSE":
-                        #Não há parentese após a chamada
-                        if self.getCurrentToken().line != line or self.getCurrentToken().type == "SEMICOLON" or self.getCurrentToken().type == "END":
-                            raise Exception('Syntatic error (expecting parenteses after parameters scope) in line {}'.format(self.getCurrentToken().line))
-                        #Leitura dos parametros
+                        #Parentese para passagem de parametros não foi fechado
+                        if self.getCurrentToken().line != line or self.getCurrentToken().type == "BOPEN" or self.getCurrentToken().type == "END":
+                            raise Exception('Syntatic error (expecting paranteses after parameters definition) in line {}'.format(self.getCurrentToken().line))
+                        #Declaração dos parametros
                         elif self.getCurrentToken().type in parameters:
-                            #Chamada de função ou procedure como parametro, não permitido
-                            if (self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower() == False):
-                                raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
-                            #parametro válido
+                            #Identifica se há uma chamada de função ou procedure como parametro, que não é permitido
+                            if self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == False:
+                                raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
+                            #Identifica se há um identificador de tipagem para uma variável
+                            elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
+                                self.current += 2
+                                commaflag = True
+                            #Parametro válido
                             else:
+                                #Leu um parametro sem que houvesse separação por virgulas
+                                if(commaflag == True):
+                                    raise Exception('Syntatic error (a comma was expected to be between two parameters) in line {}'.format(self.getCurrentToken().line))
                                 self.current += 1
+                                commaflag = True
+                        #Lendo vírgula que separa os parametros
+                        elif self.getCurrentToken().type == "COMMA" and commaflag == True:
+                            if self.getLookAheadToken().type == "PCLOSE":
+                               raise Exception('Syntatic error (expecting an argument after comma) in line{}'.format(self.getCurrentToken().line))
+                            self.current += 1
+                            commaflag = False
                         else:
-                            raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getCurrentToken().line))
+                            raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.current += 1
                     #Validação do ; ao final da chamada de função ou procedure
                     if self.getCurrentToken().type == "SEMICOLON":
