@@ -5,6 +5,7 @@ class Parser():
         self.current = 0
         self.tokens = tokens
         self.flag = 0
+        self.expression = ""
 
     #retorna o token atual
     def getCurrentToken(self):
@@ -66,6 +67,9 @@ class Parser():
                 #Guarda valor da linha e chega o valor da atribuição da variável
                 line = self.getCurrentToken().line
                 self.checkExpression()
+                #pega valor da expressão
+                auxExpression = self.expression
+                self.expression = ""
                 #verifica se após a atribuição existe um ;
                 if self.getCurrentToken().type == "SEMICOLON":
                     self.current += 1
@@ -90,12 +94,16 @@ class Parser():
             if hasLogicSymbol(self.getLookAheadToken()) == False:
                 #Declaração de um valor numérico
                 if hasArithmeticSymbol(self.getLookAheadToken()) == False:
+                    self.expression+=self.getCurrentToken().lexeme
                     self.current += 1
                     return
                 else:
                     # Operação aritmética do tipo num + num ou num+variável
+                    self.expression += self.getCurrentToken().lexeme
                     self.current += 1
                     if self.getLookAheadToken().type == "NUM" or self.getLookAheadToken().type == "LETTER":
+                        self.expression+=self.getCurrentToken().lexeme
+                        self.expression+=self.getLookAheadToken().lexeme
                         self.current += 2
                         return
                     else:
@@ -103,34 +111,45 @@ class Parser():
                         raise Exception('Syntatic error (arithmetic expression) in line {}'.format(self.getCurrentToken().line))
             else:
                 # casos que tem expressões lógicas
+                self.expression+=self.getCurrentToken().lexeme
                 self.current += 1
                 # passa para casos como num > num
                 if self.getLookAheadToken().type == "NUM":
+                    self.expression+=self.getCurrentToken().lexeme
+                    self.expression+=self.getLookAheadToken().lexeme
                     self.current += 2
                     return
                 # passa para casos como num > var
                 elif self.getLookAheadToken().type == "LETTER":
                     if self.getLookAheadToken().lexeme.islower():
+                        self.expression += self.getCurrentToken().lexeme
+                        self.expression += self.getLookAheadToken().lexeme
                         self.current += 2
                         return
                     # passa para casos como num > function()
                     elif self.getLookAheadToken().lexeme.isupper():
+                        self.expression += self.getCurrentToken().lexeme
+                        self.expression += self.getLookAheadToken().lexeme
                         self.current += 2
                         #Parâmetros da chamada da função
                         if self.getCurrentToken().type == "POPEN":
+                            self.expression += self.getCurrentToken().lexeme
                             self.current += 1
                             #Leitura de todos os parametros das função
                             while self.getCurrentToken().type != "PCLOSE":
                                 if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().lexeme.islower():
+                                    self.expression += self.getCurrentToken().lexeme
                                     self.current += 1
                                     #Existência de vírgulas separando os paramêtros
                                     if self.getCurrentToken().type == "COMMA":
+                                        self.expression += self.getCurrentToken().lexeme
                                         self.current += 1
                                         #Fecha parenteses com uma virgula antes (Ex,)
                                         if self.getCurrentToken().type == "PCLOSE":
                                             raise Exception('Syntatic error (expecting more arguments) in line {}'.format(self.getCurrentToken().line))
                                     #Fecha parenteses
                                     elif self.getCurrentToken().type == "PCLOSE":
+                                        self.expression += self.getCurrentToken().lexeme
                                         self.current += 1
                                         break
                                     else:
@@ -147,10 +166,12 @@ class Parser():
         elif self.getCurrentToken().type == "LETTER":
             # declaração de var recebendo function
             if self.getCurrentToken().lexeme.isupper():
+                self.expression += self.getCurrentToken().lexeme
                 self.current += 1
                 #Declaração de parenteses para parametros da função
                 if self.getCurrentToken().type == "POPEN":
                     line = self.getCurrentToken().line
+                    self.expression += self.getCurrentToken().lexeme
                     self.current += 1
                     commaflag = False
                     #Leitura os parametros
@@ -165,6 +186,8 @@ class Parser():
                                 raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
                             #Identifica se há um identificador de tipagem para uma variável
                             elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
+                                self.expression += self.getCurrentToken().lexeme
+                                self.expression += self.getLookAheadToken().lexeme
                                 self.current += 2
                                 commaflag = True
                             #Parametro válido
@@ -172,37 +195,49 @@ class Parser():
                                 #Leu um parametro sem que houvesse separação por virgulas
                                 if(commaflag == True):
                                     raise Exception('Syntatic error (a comma was expected to be between two parameters) in line {}'.format(self.getCurrentToken().line))
+                                self.expression += self.getCurrentToken().lexeme
                                 self.current += 1
                                 commaflag = True
                         #Lendo vírgula que separa os parametros
                         elif self.getCurrentToken().type == "COMMA" and commaflag == True:
                             if self.getLookAheadToken().type == "PCLOSE":
                                raise Exception('Syntatic error (expecting an argument after comma) in line{}'.format(self.getCurrentToken().line))
-                            self.current += 1
+                            self.expression += self.getCurrentToken().lexeme
+                            self.expression += self.getLookAheadToken().lexeme
+                            self.current += 2
                             commaflag = False
                         else:
                             raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
-                    self.current += 1
+                    self.expression+=self.getCurrentToken().lexeme
+                    self.current+=1
                 else:
                     raise Exception('Syntatic error (expecting parentheses) in line {}'.format(self.getCurrentToken().line))
             #Declaração de variável recebendo variável
             elif self.getCurrentToken().lexeme.islower():
                 #confere a atribuição de operação
                 if hasLogicSymbol(self.getLookAheadToken()) or hasArithmeticSymbol(self.getLookAheadToken()):
+                    self.expression+=self.getCurrentToken().lexeme
+                    self.expression+=self.getLookAheadToken().lexeme
                     self.current += 2
                     if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().lexeme.islower():
+                        self.expression+=self.getCurrentToken().lexeme
                         self.current += 1
                         return
                     else:
                         raise Exception('Syntatic error (incomplete logic/arithmetic expression) in line {}'.format(self.getCurrentToken().line))
                 else:
-                    raise Exception('Syntatic error (incomplete logic expression) in line {}'.format(self.getCurrentToken().line))
+                    if self.getLookAheadToken().type == "SEMICOLON":
+                        self.expression+=self.getCurrentToken().lexeme
+                        self.current+=1
+                        return
+                    else:
+                        raise Exception('Syntatic error (incomplete logic expression) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (expecting function name is upper or variable name is lower in line {}'.format(self.getCurrentToken().line))
         #Varilação através de condição = valor booleano
         elif self.getCurrentToken().type == "BOOLEAN":
+            self.expression+=self.getCurrentToken().lexeme
             self.current += 1
-
         else:
             raise Exception('Syntatic error expression in line {}'.format(self.getCurrentToken().line))
 
@@ -466,6 +501,9 @@ class Parser():
                             raise Exception('Syntatic error (invalid argument as parameter) in line{}'.format(self.getCurrentToken().line))
                         else:
                             self.checkExpression()
+                            #pegar valor da expresão
+                            auxExpression = self.expression
+                            self.expression = ""
                 self.current += 1
                 #Abertura de Chaves = escopo do IF
                 if self.getCurrentToken().type == "BOPEN":
@@ -523,6 +561,9 @@ class Parser():
                             raise Exception('Syntatic error (invalid argument as parameter) in line{}'.format(self.getCurrentToken().line))
                         else:
                             self.checkExpression()
+                            #pega valor da expressão
+                            auxExpression = self.expression
+                            self.expression = ""
                 self.current += 1
                 #Declaração do escopo do WHILE
                 if self.getCurrentToken().type == "BOPEN":
