@@ -20,3 +20,7 @@ if __name__ == "__main__":
     #Fazendo a análise sintática da entrada
     parser = Parser(tableTokens)
     parser.start()
+
+    SymbolsTable = parser.symbols
+    for i in range(len(SymbolsTable)):
+        print(SymbolsTable[i])

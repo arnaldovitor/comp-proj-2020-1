@@ -8,9 +8,9 @@ class Parser():
         self.flag = 0
         self.expression = ""
         self.symbols = []
-        self.scopes = []
+        self.scopes = [0]
         self.currentScope = 0
-
+        self.scopoPai = 0
     #retorna o token atual
     def getCurrentToken(self):
         return self.tokens[self.current]
@@ -21,14 +21,12 @@ class Parser():
 
     #main
     def start(self):
-        self.scopes.append(Scope(self.currentScope, -1)) #escopo inicial, logo o pai é -1
         self.statementList()
         return
 
     #função que verifica se o programa terminou, se não executa a recursão para chamar-la novamente
     def statementList(self):
         if self.getCurrentToken().type == "END":
-            self.scopes[0].close()
             return
         else:
             self.statement()
@@ -63,13 +61,13 @@ class Parser():
 
     # análise sintática para cadeia de tokens que começam com INTEGER ou BOOLEAN
     def varStatement(self):
-        #aux = []
-        #aux.append('VAR')
-        #aux.append(self.getCurrentToken().type)
+        aux = []
+        aux.append('VAR')
+        aux.append(self.getCurrentToken().type)
         self.current += 1
         #após tipagem deve haver nome da variável
         if self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower():
-            #aux.append(self.getCurrentToken().lexeme)
+            aux.append(self.getCurrentToken().lexeme)
             self.current += 1
             #símbolo de atribuição é necessário após nome da variável
             if self.getCurrentToken().type == "ATTR":
@@ -79,13 +77,14 @@ class Parser():
                 self.checkExpression()
                 #pega valor da expressão
                 auxExpression = self.expression
-                #aux.append(auxExpression)
+                aux.append(auxExpression)
                 self.expression = ""
                 #verifica se após a atribuição existe um ;
                 if self.getCurrentToken().type == "SEMICOLON":
-                    #aux.append(self.currentScope)
+                    aux.append(self.currentScope)
+                    aux.append(self.scopoPai)
                     self.current += 1
-                    #print(aux)
+                    self.symbols.append(aux)
                     return
                 #há alguma coisa escrita após a declaração da variável e atribuição de valor
                 elif self.getCurrentToken().line == line and self.getCurrentToken().type != "END":
@@ -298,6 +297,8 @@ class Parser():
 
     # análise sintática para funções
     def funcStatement(self):
+        aux = []
+        aux.append("FUNC")
         self.flag = 1
         #Parametros de uma função só podem ser do tipo inteiro, boolean ou variável
         parameters = ["INTEGER", "BOOLEAN"]
@@ -306,6 +307,9 @@ class Parser():
             self.current += 1
             #Nome da função está em letra maiúscula?
             if str(self.getCurrentToken().lexeme).isupper() == True:
+                aux.append(self.getCurrentToken().lexeme)
+                aux.append(self.currentScope)
+                aux.append(self.scopoPai)
                 self.current += 1
                 #Paranteses para passagem de parametros
                 if self.getCurrentToken().type == "POPEN":
@@ -324,6 +328,12 @@ class Parser():
                                 raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
                             #Identifica se há um identificador de tipagem para uma variável
                             elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
+                                aux.append("PAR")
+                                aux.append("VAR")
+                                aux.append(self.getCurrentToken().type)
+                                aux.append(self.getLookAheadToken().lexeme)
+                                aux.append(self.currentScope)
+                                aux.append(self.scopoPai)
                                 self.current += 2
                                 commaflag = True
                             #Parametro válido
@@ -341,13 +351,20 @@ class Parser():
                             commaflag = False
                         else:
                             raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
+                    self.symbols.append(aux)
                     self.current += 1
                     #Declaração de {
                     if self.getCurrentToken().type == "BOPEN":
                         self.current += 1
                         #Se proximo token não for }, declaração de escopo
                         if self.getCurrentToken().type != "BCLOSE":
+                            scopePaiAux = self.scopoPai
+                            scopeAux = self.currentScope
+                            self.scopoPai = self.currentScope
+                            self.currentScope = self.newScope()
                             self.scopoStatement(0)
+                            self.currentScope = scopeAux
+                            self.scopoPai = scopePaiAux
                         #Função sem retorno definido
                         if self.flag == 1:
                             raise Exception('Syntatic error (function without return) in line {}'.format(self.getCurrentToken().line))
@@ -368,13 +385,18 @@ class Parser():
 
     # análise sintática para procedimentos
     def procStatement(self):
+        aux = []
         parameters = ["INTEGER", "BOOLEAN", "LETTER", "COMMA"]
         #Parametros de uma procedure só podem ser do tipo inteiro, boolean ou variável
         #Declaração de procedure através de palavra reservada
         if self.getCurrentToken().type == "PROCEDURE":
+            aux.append("PROC")
             self.current += 1
             #Nome do procedure está em letra maiúscula?
             if str(self.getCurrentToken().lexeme).isupper() == True:
+                aux.append(self.getCurrentToken().lexeme)
+                aux.append(self.currentScope)
+                aux.append(self.scopoPai)
                 self.current += 1
                 #Paranteses para passagem de parametros
                 if self.getCurrentToken().type == "POPEN":
@@ -395,6 +417,11 @@ class Parser():
                             elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
                                 self.current += 2
                                 commaflag = True
+                                aux.append("PAR")
+                                aux.append(self.getCurrentToken().type)
+                                aux.append(self.getLookAheadToken().lexeme)
+                                aux.append(self.currentScope)
+                                aux.append(self.scopoPai)
                             #Parametro válido
                             else:
                                 #Leu um parametro sem que houvesse separação por virgulas
@@ -410,13 +437,20 @@ class Parser():
                             commaflag = False
                         else:
                             raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
+                    self.symbols.append(aux)
                     self.current += 1
                     #Declaração de {
                     if self.getCurrentToken().type == "BOPEN":
                         self.current += 1
                         #Se proximo token não for }, declaração de escopo
                         if self.getCurrentToken().type != "BCLOSE":
+                            scopePaiAux = self.scopoPai
+                            scopeAux = self.currentScope
+                            self.scopoPai = self.currentScope
+                            self.currentScope = self.newScope()
                             self.scopoStatement(1)
+                            self.currentScope = scopeAux
+                            self.scopoPai = scopePaiAux
                         #Confere se a função fechou }
                         if (self.getCurrentToken().type == "BCLOSE"):
                             self.current += 1
@@ -522,7 +556,13 @@ class Parser():
                 if self.getCurrentToken().type == "BOPEN":
                     self.current += 1
                     #Declaração do escopo do IF
+                    scopePaiAux = self.scopoPai
+                    scopeAux = self.currentScope
+                    self.scopoPai = self.currentScope
+                    self.currentScope = self.newScope()
                     self.scopoStatement(1)
+                    self.currentScope = scopeAux
+                    self.scopoPai = scopePaiAux
                     #Declaração de encerramento do IF
                     if self.getCurrentToken().type == "BCLOSE":
                         #Declaração de IF e ELSE
@@ -531,7 +571,13 @@ class Parser():
                             #Declaração do escopo do ELSE
                             if self.getCurrentToken().type == "BOPEN":
                                 self.current += 1
+                                scopePaiAux = self.scopoPai
+                                scopeAux = self.currentScope
+                                self.scopoPai = self.currentScope
+                                self.currentScope = self.newScope()
                                 self.scopoStatement(1)
+                                self.currentScope = scopeAux
+                                self.scopoPai = scopePaiAux
                                 #Declaração do encerramento do ELSE
                                 if self.getCurrentToken().type == "BCLOSE":
                                     self.current += 1
@@ -581,7 +627,13 @@ class Parser():
                 #Declaração do escopo do WHILE
                 if self.getCurrentToken().type == "BOPEN":
                     self.current += 1
+                    scopePaiAux = self.scopoPai
+                    scopeAux = self.currentScope
+                    self.scopoPai = self.currentScope
+                    self.currentScope = self.newScope()
                     self.scopoStatement(2)
+                    self.currentScope = scopeAux
+                    self.scopoPai = scopePaiAux
                     if self.getCurrentToken().type == "BREAK" or self.getCurrentToken().type == "CONTINUE":
                         if(self.getLookAheadToken().type == "SEMICOLON"):
                             self.current+=2
@@ -633,6 +685,8 @@ class Parser():
 
         #Declaração do RETURN
         elif self.getCurrentToken().type == "RETURN":
+            aux = []
+            aux.append(self.getCurrentToken().type)
             self.current += 1
             #Tipos válidos de retorno
             parameters = ["INTEGER", "BOOLEAN", "LETTER", "NUM"]
@@ -645,21 +699,31 @@ class Parser():
                         raise Exception('Syntatic error (invalid argument for RETURN) in line {}'.format(self.getCurrentToken().line))
                     #Retorno válido
                     else:
+                        aux.append(self.searchSymbolTable(self.getCurrentToken().lexeme,self.currentScope,self.scopoPai))
+                        aux.append(self.getCurrentToken().lexeme)
+                        aux.append(self.currentScope)
+                        aux.append(self.scopoPai)
                         self.current += 1
                         #Declaração de ; após o return
                         if self.getCurrentToken().type == "SEMICOLON":
                             self.current += 1
                             self.flag = 0
+                            self.symbols.append(aux)
                             return
                         else:
                             raise Exception('Syntatic error (expecting ; but recieved invalid argument) in line {}'.format(self.getCurrentToken().line))
                 #checar retorno de valor bruto
                 else:
+                    aux.append(self.searchSymbolTable(self.getCurrentToken().lexeme,self.currentScope,self.scopoPai))
+                    aux.append(self.getCurrentToken().lexeme)
+                    aux.append(self.currentScope)
+                    aux.append(self.scopoPai)
                     self.current += 1
                     #Declaração de ; após o return
                     if self.getCurrentToken().type == "SEMICOLON":
                         self.current += 1
                         self.flag = 0
+                        self.symbols.append(aux)
                         return
                     else:
                         raise Exception('Syntatic error (expecting ; but recieved invalid argument) in line {}'.format(self.getCurrentToken().line))
@@ -667,3 +731,31 @@ class Parser():
                 raise Exception('Syntatic error (invalid type as return) in line {}'.format(self.getCurrentToken().line))
         else:
             raise Exception('Syntatic error (unexpect argument of system call) in line {}'.format(self.getCurrentToken().line))
+
+
+    def searchSymbolTable(self,query, scope, scopoPai):
+        flag = False
+        retorno = ""
+        for i in range(len(self.symbols)):
+            aux = self.symbols[i]
+            if(aux[2] == query and aux[4] == scope):
+                flag = True;
+                retorno = aux[1]
+                break
+            elif(aux[0] == "FUNC"):
+                for j in range(len(aux)-1):
+                    if(aux[j] == query and aux[j+1] == scopoPai):
+                        flag = True
+                        retorno = aux[j-1]
+                        break
+                if(flag):
+                    break
+        if(flag):
+            return retorno
+        else:
+            raise Exception('Returning an undeclared variable in line {}'.format(self.getCurrentToken().line))
+
+    def newScope(self):
+        newscope = self.scopes[len(self.scopes)-1]+1
+        self.scopes.append(newscope)
+        return newscope

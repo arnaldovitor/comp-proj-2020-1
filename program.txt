@@ -1,12 +1,8 @@
 FUNCTION POTENCIA(INTEGER variavel){
-	IF(False){
-		INTEGER auxiliar = 0;
-	}
-	ELSE{
-		INTEGER auxiliar = 3*2;
-	}
-	RETURN auxiliar;
+	INTEGER auxiliar = 1;
+	RETURN maxixe;
 }
+
 PROCEDURE DIVIDIREPRINTAR(){
 	INTEGER auxiliar = valor/2;
 	PRINT(auxiliar,3,True);
