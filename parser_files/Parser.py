@@ -1,4 +1,5 @@
 from parser_files.Util import *
+from parser_files.Scope import *
 
 class Parser():
     def __init__(self, tokens):
@@ -6,6 +7,9 @@ class Parser():
         self.tokens = tokens
         self.flag = 0
         self.expression = ""
+        self.symbols = []
+        self.scopes = []
+        self.currentScope = 0
 
     #retorna o token atual
     def getCurrentToken(self):
@@ -17,12 +21,14 @@ class Parser():
 
     #main
     def start(self):
+        self.scopes.append(Scope(self.currentScope, -1)) #escopo inicial, logo o pai é -1
         self.statementList()
         return
 
     #função que verifica se o programa terminou, se não executa a recursão para chamar-la novamente
     def statementList(self):
         if self.getCurrentToken().type == "END":
+            self.scopes[0].close()
             return
         else:
             self.statement()
@@ -57,9 +63,13 @@ class Parser():
 
     # análise sintática para cadeia de tokens que começam com INTEGER ou BOOLEAN
     def varStatement(self):
+        #aux = []
+        #aux.append('VAR')
+        #aux.append(self.getCurrentToken().type)
         self.current += 1
         #após tipagem deve haver nome da variável
         if self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower():
+            #aux.append(self.getCurrentToken().lexeme)
             self.current += 1
             #símbolo de atribuição é necessário após nome da variável
             if self.getCurrentToken().type == "ATTR":
@@ -69,10 +79,13 @@ class Parser():
                 self.checkExpression()
                 #pega valor da expressão
                 auxExpression = self.expression
+                #aux.append(auxExpression)
                 self.expression = ""
                 #verifica se após a atribuição existe um ;
                 if self.getCurrentToken().type == "SEMICOLON":
+                    #aux.append(self.currentScope)
                     self.current += 1
+                    #print(aux)
                     return
                 #há alguma coisa escrita após a declaração da variável e atribuição de valor
                 elif self.getCurrentToken().line == line and self.getCurrentToken().type != "END":
