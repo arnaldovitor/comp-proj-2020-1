@@ -1,6 +1,6 @@
 FUNCTION POTENCIA(INTEGER variavel){
 	INTEGER auxiliar = 1;
-	RETURN maxixe;
+	RETURN variavel;
 }
 
 PROCEDURE DIVIDIREPRINTAR(){
@@ -10,6 +10,12 @@ PROCEDURE DIVIDIREPRINTAR(){
 WHILE(3<5){
 	IF(False){
 		INTEGER auxiliar = 0;
+		IF(True){
+			INTEGER teste = 1;
+			IF(True){
+				BOOLEAN testando = False;
+			}
+		}
 	}
 	ELSE{
 		INTEGER auxiliar = 3*2;
