@@ -1,5 +1,4 @@
 from parser_files.Util import *
-from parser_files.Scope import *
 
 class Parser():
     def __init__(self, tokens):
