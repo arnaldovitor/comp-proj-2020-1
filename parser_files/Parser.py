@@ -10,6 +10,9 @@ class Parser():
         self.scopes = [0]
         self.currentScope = 0
         self.scopoPai = 0
+        self.listScopos = []
+        self.symbolsSemantic = []
+        
     #retorna o token atual
     def getCurrentToken(self):
         return self.tokens[self.current]
@@ -56,10 +59,11 @@ class Parser():
             self.systemCallStatement()
             return
         else:
-            raise Exception('Syntatic error (variable initialized without type) in line{}'.format(self.getCurrentToken().line))
+            raise Exception('Syntatic error (variable initialized without type) in line {}'.format(self.getCurrentToken().line))
 
     # análise sintática para cadeia de tokens que começam com INTEGER ou BOOLEAN
     def varStatement(self):
+        booleanOperation = [">","<",">=","<=","==","!=","True","False"]
         aux = []
         aux.append('VAR')
         aux.append(self.getCurrentToken().type)
@@ -73,22 +77,26 @@ class Parser():
                 self.current += 1
                 #Guarda valor da linha e chega o valor da atribuição da variável
                 line = self.getCurrentToken().line
-                self.checkExpression()
+                atributos = self.checkExpression(aux[1])
                 #pega valor da expressão
-                auxExpression = self.expression
+                auxExpression = self.expression      
                 aux.append(auxExpression)
+                aux.append(atributos)
                 self.expression = ""
                 #verifica se após a atribuição existe um ;
                 if self.getCurrentToken().type == "SEMICOLON":
                     aux.append(self.currentScope)
                     aux.append(self.scopoPai)
+                    linha = self.getCurrentToken().line
                     self.current += 1
                     self.symbols.append(aux)
+                    aux.append(linha)
+                    self.symbolsSemantic.append(aux)
                     return
                 #há alguma coisa escrita após a declaração da variável e atribuição de valor
                 elif self.getCurrentToken().line == line and self.getCurrentToken().type != "END":
                     raise Exception(
-                        'Syntatic error (expressions must be at most between two operands) in line{}'.format(self.getCurrentToken().line))
+                        'Syntatic error (expressions must be at most between two operands) in line {}'.format(self.getCurrentToken().line))
                 else:
                     raise Exception('Syntatic error (expecting ; after variable declaration) in line {}'.format(self.getCurrentToken().line))
             else:
@@ -97,9 +105,10 @@ class Parser():
             raise Exception('Syntatic error (expecting a variable name) in line {}'.format(self.getCurrentToken().line))
 
     # análise sintática para expressões lógicas ou aritméticas
-    def checkExpression(self):
+    def checkExpression(self,tipo):
         parameters = ["INTEGER", "BOOLEAN","NUM"]
         #Validação de expressões númericas
+        semanticValues = []
         if self.getCurrentToken().type == "NUM":
             # passa para declaração simples de integer
             if hasLogicSymbol(self.getLookAheadToken()) == False:
@@ -107,7 +116,7 @@ class Parser():
                 if hasArithmeticSymbol(self.getLookAheadToken()) == False:
                     self.expression+=self.getCurrentToken().lexeme
                     self.current += 1
-                    return
+                    return semanticValues
                 else:
                     # Operação aritmética do tipo num + num ou num+variável
                     self.expression += self.getCurrentToken().lexeme
@@ -115,8 +124,10 @@ class Parser():
                     if self.getLookAheadToken().type == "NUM" or self.getLookAheadToken().type == "LETTER":
                         self.expression+=self.getCurrentToken().lexeme
                         self.expression+=self.getLookAheadToken().lexeme
+                        if(self.getLookAheadToken().type == "LETTER"):
+                            semanticValues.append(self.getLookAheadToken().lexeme)
                         self.current += 2
-                        return
+                        return semanticValues
                     else:
                         # nega casos num + /
                         raise Exception('Syntatic error (arithmetic expression) in line {}'.format(self.getCurrentToken().line))
@@ -129,14 +140,15 @@ class Parser():
                     self.expression+=self.getCurrentToken().lexeme
                     self.expression+=self.getLookAheadToken().lexeme
                     self.current += 2
-                    return
+                    return semanticValues
                 # passa para casos como num > var
                 elif self.getLookAheadToken().type == "LETTER":
                     if self.getLookAheadToken().lexeme.islower():
                         self.expression += self.getCurrentToken().lexeme
                         self.expression += self.getLookAheadToken().lexeme
+                        semanticValues.append(self.getLookAheadToken().lexeme)
                         self.current += 2
-                        return
+                        return semanticValues
                     # passa para casos como num > function()
                     elif self.getLookAheadToken().lexeme.isupper():
                         self.expression += self.getCurrentToken().lexeme
@@ -221,34 +233,39 @@ class Parser():
                             raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.expression+=self.getCurrentToken().lexeme
                     self.current+=1
+                    return semanticValues
                 else:
                     raise Exception('Syntatic error (expecting parentheses) in line {}'.format(self.getCurrentToken().line))
             #Declaração de variável recebendo variável
             elif self.getCurrentToken().lexeme.islower():
+                semanticValues.append(self.getCurrentToken().lexeme)
                 #confere a atribuição de operação
                 if hasLogicSymbol(self.getLookAheadToken()) or hasArithmeticSymbol(self.getLookAheadToken()):
                     self.expression+=self.getCurrentToken().lexeme
                     self.expression+=self.getLookAheadToken().lexeme
                     self.current += 2
                     if self.getCurrentToken().type == "NUM" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().lexeme.islower():
+                        if(self.getCurrentToken().lexeme.islower()):
+                            semanticValues.append(self.getCurrentToken().lexeme)
                         self.expression+=self.getCurrentToken().lexeme
                         self.current += 1
-                        return
+                        return semanticValues
                     else:
                         raise Exception('Syntatic error (incomplete logic/arithmetic expression) in line {}'.format(self.getCurrentToken().line))
                 else:
                     if self.getLookAheadToken().type == "SEMICOLON":
                         self.expression+=self.getCurrentToken().lexeme
                         self.current+=1
-                        return
+                        return semanticValues
                     else:
                         raise Exception('Syntatic error (incomplete logic expression) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (expecting function name is upper or variable name is lower in line {}'.format(self.getCurrentToken().line))
-        #Varilação através de condição = valor booleano
+        #Validação através de condição = valor booleano
         elif self.getCurrentToken().type == "BOOLEAN":
             self.expression+=self.getCurrentToken().lexeme
             self.current += 1
+            return semanticValues
         else:
             raise Exception('Syntatic error expression in line {}'.format(self.getCurrentToken().line))
 
@@ -284,6 +301,7 @@ class Parser():
                 self.current += 1
             elif (self.getCurrentToken().type == "BREAK" or self.getCurrentToken().type == "CONTINUE") and tipo == 2:
                 if self.getLookAheadToken().type == "SEMICOLON":
+                    self.symbolsSemantic.append([self.getCurrentToken().lexeme, self.getCurrentToken().line])
                     self.current += 1
                 else:
                     raise Exception('Syntatic error (expecting semicolon after break or continue statement) in line {}'.format(self.getCurrentToken().line))
@@ -351,6 +369,8 @@ class Parser():
                         else:
                             raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.symbols.append(aux)
+                    aux.append(self.getCurrentToken().line)
+                    self.symbolsSemantic.append(aux)
                     self.current += 1
                     #Declaração de {
                     if self.getCurrentToken().type == "BOPEN":
@@ -369,6 +389,7 @@ class Parser():
                             raise Exception('Syntatic error (function without return) in line {}'.format(self.getCurrentToken().line))
                         #Confere se a função fechou }
                         if self.getCurrentToken().type == "BCLOSE":
+                            self.symbolsSemantic.append(["END FUNC"])
                             self.current += 1
                             return
                         else:
@@ -385,7 +406,7 @@ class Parser():
     # análise sintática para procedimentos
     def procStatement(self):
         aux = []
-        parameters = ["INTEGER", "BOOLEAN", "LETTER", "COMMA"]
+        parameters = ["INTEGER", "BOOLEAN", "LETTER", "NUM"]
         #Parametros de uma procedure só podem ser do tipo inteiro, boolean ou variável
         #Declaração de procedure através de palavra reservada
         if self.getCurrentToken().type == "PROCEDURE":
@@ -414,13 +435,14 @@ class Parser():
                                 raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
                             #Identifica se há um identificador de tipagem para uma variável
                             elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
-                                self.current += 2
-                                commaflag = True
                                 aux.append("PAR")
+                                aux.append("VAR")
                                 aux.append(self.getCurrentToken().type)
                                 aux.append(self.getLookAheadToken().lexeme)
                                 aux.append(self.currentScope)
                                 aux.append(self.scopoPai)
+                                self.current += 2
+                                commaflag = True
                             #Parametro válido
                             else:
                                 #Leu um parametro sem que houvesse separação por virgulas
@@ -437,6 +459,8 @@ class Parser():
                         else:
                             raise Exception('Syntatic error (invalid function ou procedure parameter) in line {}'.format(self.getCurrentToken().line))
                     self.symbols.append(aux)
+                    aux.append(self.getCurrentToken().line)
+                    self.symbolsSemantic.append(aux)
                     self.current += 1
                     #Declaração de {
                     if self.getCurrentToken().type == "BOPEN":
@@ -452,6 +476,7 @@ class Parser():
                             self.scopoPai = scopePaiAux
                         #Confere se a função fechou }
                         if (self.getCurrentToken().type == "BCLOSE"):
+                            self.symbolsSemantic.append(["END PROC"])
                             self.current += 1
                             return
                         else:
@@ -468,10 +493,15 @@ class Parser():
     # análise sintática para chamada de funções e procedimentos
     def callStatement(self):
         #Tipos que podem ser atribuidos aos parametros
-        parameters = ["INTEGER", "BOOLEAN", "COMMA", "LETTER", "NUM"]
+        parameters = ["INTEGER", "BOOLEAN", "LETTER", "NUM"]
         if self.getCurrentToken().type == "LETTER":
             #Chamada de função ou procedure está em letra maiúscula
             if(self.getCurrentToken().lexeme.isupper() == True):
+                StringSemantic = [self.getCurrentToken().lexeme]
+                #Inserindo o escopo onde a chamada da função está
+                scopoAux = self.getCurrentToken().lexeme+" "+str(self.currentScope)
+                self.listScopos.append(scopoAux)
+                #
                 self.current += 1
                 #Declaração dos parametros da chamada
                 if self.getCurrentToken().type == "POPEN":
@@ -490,6 +520,7 @@ class Parser():
                                 raise Exception('Syntatic error (invalid argument as parameter) in line {}'.format(self.getLookAheadToken().line))
                             #Identifica se há um identificador de tipagem para uma variável
                             elif self.getLookAheadToken().type == "LETTER" and self.getLookAheadToken().lexeme.islower() == True:
+                                StringSemantic.append(self.getLookAheadToken().lexeme)
                                 self.current += 2
                                 commaflag = True
                             #Parametro válido
@@ -497,6 +528,7 @@ class Parser():
                                 #Leu um parametro sem que houvesse separação por virgulas
                                 if(commaflag == True):
                                     raise Exception('Syntatic error (a comma was expected to be between two parameters) in line {}'.format(self.getCurrentToken().line))
+                                StringSemantic.append(self.getCurrentToken().lexeme)
                                 self.current += 1
                                 commaflag = True
                         #Lendo vírgula que separa os parametros
@@ -510,6 +542,8 @@ class Parser():
                     self.current += 1
                     #Validação do ; ao final da chamada de função ou procedure
                     if self.getCurrentToken().type == "SEMICOLON":
+                        StringSemantic.append(self.getCurrentToken().line)
+                        self.symbolsSemantic.append(StringSemantic)
                         self.current += 1
                     else:
                         raise Exception('Syntatic error (expecting ; at the end of fucntion or procedure call) in line {}'.format(self.getCurrentToken().line))
@@ -529,6 +563,7 @@ class Parser():
         cant = ["SEMICOLON", "END", "BOPEN", "BCLOSE"]
         #Declaração do IF
         if self.getCurrentToken().type == "IF":
+            auxIF = ["IF"]
             self.current += 1
             #Validação do parantese para condição do IF
             if self.getCurrentToken().type == "POPEN":
@@ -546,10 +581,13 @@ class Parser():
                         if(self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower() == False):
                             raise Exception('Syntatic error (invalid argument as parameter) in line{}'.format(self.getCurrentToken().line))
                         else:
-                            self.checkExpression()
+                            self.checkExpression("BOOLEAN")
                             #pegar valor da expresão
                             auxExpression = self.expression
+                            auxIF.append(auxExpression)
+                            auxIF.append(self.getCurrentToken().line)
                             self.expression = ""
+                self.symbolsSemantic.append(auxIF)
                 self.current += 1
                 #Abertura de Chaves = escopo do IF
                 if self.getCurrentToken().type == "BOPEN":
@@ -564,9 +602,11 @@ class Parser():
                     self.scopoPai = scopePaiAux
                     #Declaração de encerramento do IF
                     if self.getCurrentToken().type == "BCLOSE":
+                        self.symbolsSemantic.append(["END IF"])
                         #Declaração de IF e ELSE
                         if self.getLookAheadToken().type == "ELSE":
                             self.current += 2
+                            self.symbolsSemantic.append(["ELSE"])
                             #Declaração do escopo do ELSE
                             if self.getCurrentToken().type == "BOPEN":
                                 self.current += 1
@@ -579,6 +619,7 @@ class Parser():
                                 self.scopoPai = scopePaiAux
                                 #Declaração do encerramento do ELSE
                                 if self.getCurrentToken().type == "BCLOSE":
+                                    self.symbolsSemantic.append(["END ELSE"])
                                     self.current += 1
                                     return
                                 else:
@@ -600,6 +641,7 @@ class Parser():
 
         #Declaração do While
         elif self.getCurrentToken().type == "WHILE":
+            auxWHILE = ["WHILE"]
             self.current += 1
             #Declaração da condição do WHILE
             if self.getCurrentToken().type == "POPEN":
@@ -618,10 +660,13 @@ class Parser():
                         if(self.getCurrentToken().type == "LETTER" and self.getCurrentToken().lexeme.islower() == False):
                             raise Exception('Syntatic error (invalid argument as parameter) in line{}'.format(self.getCurrentToken().line))
                         else:
-                            self.checkExpression()
+                            self.checkExpression("BOOLEAN")
                             #pega valor da expressão
                             auxExpression = self.expression
+                            auxWHILE.append(auxExpression)
+                            auxWHILE.append(self.getCurrentToken().line)
                             self.expression = ""
+                self.symbolsSemantic.append(auxWHILE)
                 self.current += 1
                 #Declaração do escopo do WHILE
                 if self.getCurrentToken().type == "BOPEN":
@@ -640,6 +685,7 @@ class Parser():
                             raise Exception('Syntatic error (expecting semicolon after a break or continue statement) in line {}'.format(self.getCurrentToken().line))
                     #Declaração de termino do WHILE
                     if self.getCurrentToken().type == "BCLOSE":
+                        self.symbolsSemantic.append(["END WHILE"])
                         self.current += 1
                     else:
                         raise Exception('Syntatic error (expecting brackets after WHILE scope) in line {}'.format(self.getCurrentToken().line))
@@ -651,6 +697,10 @@ class Parser():
 
         #Declaração PRINT
         elif self.getCurrentToken().type == "PRINT":
+            StringSemantic = ["PRINT"]
+            #Inserindo o escopo onde a chamada da função está
+            scopoAux = self.getCurrentToken().lexeme
+            #
             self.current += 1
             #Declaração de parametros do PRINT
             if self.getCurrentToken().type == "POPEN":
@@ -669,12 +719,20 @@ class Parser():
                             raise Exception('Syntatic error (invalid argument as parameter) in line{}'.format(self.getCurrentToken().line))
                         #Elemento permitido no print
                         elif(self.getCurrentToken().type in parameters):
+                            if(self.getCurrentToken().type != "COMMA"):
+                                StringSemantic.append(self.getCurrentToken().lexeme)
+                            scopoAux += " "+self.getCurrentToken().lexeme
                             self.current += 1
                         else:
                             raise Exception('Syntatic error (invalid argument as parameter) in line{}'.format(self.getCurrentToken().line))
                 self.current += 1
                 #Declaração de ; após o PRINT
                 if self.getCurrentToken().type == "SEMICOLON":
+                    StringSemantic.append(self.getCurrentToken().line)
+                    self.symbolsSemantic.append(StringSemantic)
+                    scopoAux +=", "+str(self.currentScope)
+                    scopoAux +=", "+str(self.scopoPai)
+                    self.listScopos.append(scopoAux)
                     self.current += 1
                     return
                 else:
@@ -705,27 +763,35 @@ class Parser():
                         self.current += 1
                         #Declaração de ; após o return
                         if self.getCurrentToken().type == "SEMICOLON":
+                            linha = self.getCurrentToken().line
                             self.current += 1
                             self.flag = 0
                             self.symbols.append(aux)
+                            aux.append(linha)
+                            self.symbolsSemantic.append(aux)
                             return
                         else:
                             raise Exception('Syntatic error (expecting ; but recieved invalid argument) in line {}'.format(self.getCurrentToken().line))
                 #checar retorno de valor bruto
                 else:
-                    aux.append(self.searchSymbolTable(self.getCurrentToken().lexeme,self.currentScope,self.scopoPai))
-                    aux.append(self.getCurrentToken().lexeme)
-                    aux.append(self.currentScope)
-                    aux.append(self.scopoPai)
-                    self.current += 1
-                    #Declaração de ; após o return
-                    if self.getCurrentToken().type == "SEMICOLON":
+                    if(self.getCurrentToken().type == "INTEGER" or self.getCurrentToken().type == "BOOLEAN" or self.getCurrentToken().type == "NUM"):
+                        aux.append(self.getCurrentToken().type)
+                        aux.append(self.getCurrentToken().lexeme)
+                        aux.append(self.currentScope)
+                        aux.append(self.scopoPai)
                         self.current += 1
-                        self.flag = 0
-                        self.symbols.append(aux)
-                        return
+                        #Declaração de ; após o return
+                        if self.getCurrentToken().type == "SEMICOLON":
+                            self.current += 1
+                            self.flag = 0
+                            self.symbols.append(aux)
+                            aux.append(self.getCurrentToken().line)
+                            self.symbolsSemantic.append(aux)
+                            return
+                        else:
+                            raise Exception('Syntatic error (expecting ; but recieved invalid argument) in line {}'.format(self.getCurrentToken().line))
                     else:
-                        raise Exception('Syntatic error (expecting ; but recieved invalid argument) in line {}'.format(self.getCurrentToken().line))
+                        raise Exception('Syntatic error (invalid return value) in line {}'.format(self.getCurrentToken().line))
             else:
                 raise Exception('Syntatic error (invalid type as return) in line {}'.format(self.getCurrentToken().line))
         else:
@@ -737,7 +803,7 @@ class Parser():
         retorno = ""
         for i in range(len(self.symbols)):
             aux = self.symbols[i]
-            if(aux[2] == query and aux[4] == scope):
+            if(aux[2] == query and aux[5] == scope):
                 flag = True;
                 retorno = aux[1]
                 break
