@@ -1,28 +1,49 @@
-FUNCTION POTENCIA(INTEGER variavel){
-	INTEGER auxiliar = 1;
-	RETURN variavel;
+INTEGER functeste = 0;
+
+FUNCTION POTENCIA(INTEGER variavel, INTEGER functeste){
+	INTEGER auxiliar = variavel;
+	PRINT(variavel);
+	RETURN 1;
 }
 
-PROCEDURE DIVIDIREPRINTAR(){
-	INTEGER auxiliar = valor/2;
-	PRINT(auxiliar,3,True);
+PROCEDURE DIVIDIREPRINTAR(INTEGER valor, INTEGER nvalor, BOOLEAN mvalor){
+	INTEGER auxiliar = valor/2;	
+	PRINT(auxiliar,1,True);
 }
-WHILE(3<5){
-	IF(False){
+
+WHILE(3>5){
+	IF(3<5){
 		INTEGER auxiliar = 0;
-		IF(True){
+		IF(functeste<auxiliar){
 			INTEGER teste = 1;
 			IF(True){
-				BOOLEAN testando = False;
+				BOOLEAN testando = True;
 			}
 		}
 	}
 	ELSE{
 		INTEGER auxiliar = 3*2;
 	}
+	WHILE(True){
+		PRINT(True);
+	}
 	PRINT(1);
 	CONTINUE;
 }
-INTEGER carambola = POTENCIA(1);
-INTEGER carambola = 1+carambola;
-DIVIDIREPRINTAR(carambola);
+INTEGER carambola = POTENCIA(1,0);
+INTEGER carambola = 1;
+DIVIDIREPRINTAR(carambola, 1, True);
+
+FUNCTION NOVA(INTEGER teste){
+	PRINT(teste,True,3);
+	RETURN teste;
+}
+
+PROCEDURE ALA(INTEGER valor){
+	PRINT(1);
+}
+
+NOVA(1);
+BOOLEAN ab = True;
+BOOLEAN ba = False;
+BOOLEAN teste = carambola==functeste;

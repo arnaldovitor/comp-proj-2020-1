@@ -1,6 +1,9 @@
 import sys
+import os.path
 from lexer_files.Scanner import Scanner
 from parser_files.Parser import Parser
+from parser_files.Semantic import Semantic
+from parser_files.Conversor import Conversor
 
 if __name__ == "__main__":
     #Abrir arquivo de entrada
@@ -24,3 +27,15 @@ if __name__ == "__main__":
     SymbolsTable = parser.symbols
     for i in range(len(SymbolsTable)):
         print(SymbolsTable[i])
+
+    print()
+    SymbolsSemantic = parser.symbolsSemantic
+    for i in range(len(SymbolsSemantic)):
+        print(SymbolsSemantic[i])
+    print()
+    
+    semantic = Semantic(SymbolsSemantic)
+    semantic.start()
+
+    conversor = Conversor(SymbolsSemantic)
+    conversor.start()
