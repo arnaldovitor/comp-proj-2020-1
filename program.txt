@@ -19,6 +19,9 @@ WHILE(3>5){
 			IF(True){
 				BOOLEAN testando = True;
 			}
+			ELSE{
+				PRINT(1);
+			}
 		}
 	}
 	ELSE{
@@ -34,16 +37,16 @@ INTEGER carambola = POTENCIA(1,0);
 INTEGER carambola = 1;
 DIVIDIREPRINTAR(carambola, 1, True);
 
-FUNCTION NOVA(INTEGER teste){
-	PRINT(teste,True,3);
-	RETURN teste;
+FUNCTION NOVA(){
+	PRINT(1,True,3);
+	RETURN 1;
 }
 
-PROCEDURE ALA(INTEGER valor){
+PROCEDURE ALA(){
 	PRINT(1);
 }
 
-NOVA(1);
+INTEGER novoteste = NOVA();
 BOOLEAN ab = True;
 BOOLEAN ba = False;
 BOOLEAN teste = carambola==functeste;

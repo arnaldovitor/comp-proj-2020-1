@@ -11,6 +11,7 @@ class Semantic():
         #validação de escopo totalmente completa, validação de valores de variáveis completa, falta (IF, WHILE, CALLS)
         self.validarEscopo()
 
+    #verifica se não há duas funções ou dois procedures com o mesmo nome
     def validarTabela(self):
         for i in range(len(self.symbols)):
             for j in range(i+1,len(self.symbols)):
@@ -29,6 +30,7 @@ class Semantic():
                         if(self.symbols[i][1] == self.symbols[j][1]):
                             raise Exception('Semantic error (there are a procedure declared earlier with the same name) in line {}'.format(i+1))
 
+    #valida escopo do programa (escopo a nível global)
     def validarEscopo(self):
         contadorIF = 0
         contadorELSE = 0
@@ -37,39 +39,49 @@ class Semantic():
         variaveis = []
         naoconta = ["END FUNC","END PROC","END WHILE","END IF","END ELSE","BREAK","CONTINUE"]
         while(i<len(self.symbols)):
+            #valida escopo de função
             if(self.symbols[i][0] == "FUNC"):
                 i = self.escopoFUNC(i)
+            #valida escopo de procedures
             elif(self.symbols[i][0] == "PROC"):
                 i = self.escopoPROC(i)
+            #valida escopo de variáveis
             elif(self.symbols[i][0] == "VAR"):
                 existe = False
+                #confere se a variável realmente existe, checando a tabela de símbolos
                 for j in range(len(variaveis)):
                     if(variaveis[j][1] == self.symbols[i][2]):
                         existe = True
                         break
                 if(not existe):
                     variaveis.append(self.symbols[i][1:3])
+                #checa a tipagem da variável e da associação do valor dela
                 self.varChecagem(self.symbols[i],variaveis)
+            #valida IFs
             elif(self.symbols[i][0] == "IF"):
                 self.checkExpression(self.symbols[i][1],self.symbols[i][2],variaveis)
                 i = self.escopoIF(i,variaveis)
+            #valida WHILEs
             elif(self.symbols[i][0] == "WHILE"):
                 self.checkExpression(self.symbols[i][1],self.symbols[i][2],variaveis)
                 i = self.escopoWHILE(i,variaveis)
-                #
+            #valida ELSEs
             elif(self.symbols[i][0] == "ELSE"):
                 i = self.escopoIF(i,variaveis)
+            #pula linhas que identificam o termino de blocos, brek e continue
             elif(self.symbols[i][0] in naoconta):
                 pass
+            #valida PRINTs
             elif(self.symbols[i][0] == "PRINT"):
                 flag = self.escopoPRINTeRETURN(self.symbols[i],variaveis,0)
                 if(not flag):
                     raise Exception('Semantic error (variable not declared in the scope) in line {}'.format(self.symbols[i][len(self.symbols[i])-1]))
+            #valida chamadas de função e procedures
             elif(self.symbols[i][0].isupper()):
                 self.escopoCALL(self.symbols[i],variaveis)
-                #
             i+=1
 
+    #valida escopo de Função
     def escopoFUNC(self,i):
         variaveisFunc = []
         #verifica as variáveis nos parametros da função
@@ -82,7 +94,8 @@ class Semantic():
         while(j<len(self.symbols)):
             if(self.symbols[j][0] == "END FUNC"):
                 return j;
-                    
+
+            #valida declaração de variáveis dentro de funções e checa a tipagem da atribuição
             elif(self.symbols[j][0] == "VAR"):
                 if(len(self.symbols[j][4])>0):
                     for k in range(len(self.symbols[j][4])):
@@ -98,26 +111,33 @@ class Semantic():
                 aux.append(self.symbols[j][2])
                 variaveisFunc.append(aux)
                 self.varChecagem(self.symbols[i],variaveisFunc)
+            #valida IFs dentro de funções
             elif(self.symbols[j][0] == "IF"):
                 self.checkExpression(self.symbols[j][1],self.symbols[j][2],variaveisFunc)
                 j = self.escopoIF(j,variaveisFunc)
+            #valida ELSEs dentro de funções
             elif(self.symbols[j][0] == "ELSE"):
                 j = self.escopoELSE(j, variaveisFunc)
+            #valida WHILE dentro de funções
             elif(self.symbols[j][0] == "WHILE"):
                 self.checkExpression(self.symbols[j][1],self.symbols[j][2],variaveisFunc)
                 j = self.escopoWHILE(j,variaveisFunc)
+            #valida PRINTs dentro de funções
             elif(self.symbols[j][0] == "PRINT"):
                 flag = self.escopoPRINTeRETURN(self.symbols[j],variaveisFunc,0)
                 if(not flag):
                     raise Exception('Semantic error (variable not declared in the function scope) in line {}'.format(self.symbols[j][len(self.symbols[j])-1]))
+            #valida o retorno da função
             elif(self.symbols[j][0] == "RETURN"):
                 flag = self.escopoPRINTeRETURN(self.symbols[j],variaveisFunc,1)
                 if(not flag):
                     raise Exception('Semantic error (variable not declared in the function scope) in line {}'.format(self.symbols[j][len(self.symbols[j])-1]))
+            #valida chamada de funções e procedures dentro da função
             elif(self.symbols[j][0].isupper()):
                 escopoCALL(self.symbols[j],variaveisFunc)
             j+=1
 
+    #valida a semantica de procedures
     def escopoPROC(self,i):
         variaveisFunc = []
         #verifica as variáveis nos parametros da função
@@ -130,7 +150,7 @@ class Semantic():
         while(j<len(self.symbols)):
             if(self.symbols[j][0] == "END PROC"):
                 return j;
-                    
+            #valida declaração de variáveis dentro de procedures e a tipagem de sua atribuição
             elif(self.symbols[j][0] == "VAR"):
                 if(len(self.symbols[j][4])>0):
                     for k in range(len(self.symbols[j][4])):
@@ -146,24 +166,31 @@ class Semantic():
                 aux.append(self.symbols[j][2])
                 variaveisFunc.append(aux)
                 self.varChecagem(self.symbols[i],variaveisFunc)
+            #valida IFs dentro de procedures
             elif(self.symbols[j][0] == "IF"):
                 self.checkExpression(self.symbols[j][1],self.symbols[j][2],variaveisFunc)
                 j = self.escopoIF(j,variaveisFunc)
+            #valida ELSEs dentro de procedures
             elif(self.symbols[j][0] == "ELSE"):
                 j = self.escopoELSE(j, variaveisFunc)
+            #valida WHILE dentro de procedures
             elif(self.symbols[j][0] == "WHILE"):
                 self.checkExpression(self.symbols[j][1],self.symbols[j][2],variaveisFunc)
                 j = self.escopoWHILE(j,variaveisFunc)
+            #valida PRINT dentro de procedures
             elif(self.symbols[j][0] == "PRINT"):
                 flag = self.escopoPRINTeRETURN(self.symbols[j],variaveisFunc,0)
                 if(not flag):
                     raise Exception('Semantic error (variable not declared in the function scope) in line {}'.format(self.symbols[j][len(self.symbols[j])-1]))
+            #valida chamada de função ou procedure dentro de procedures
             elif(self.symbols[j][0].isupper()):
                 escopoCALL(self.symbols[j],variaveisFunc)
             j+=1
 
+    #valida chamada de funções
     def escopoCALL(self,linha,var):
         flag = False
+        #valida para ver se as variáveis passadas estão de acordo com a chamada, em tipagem e quantidade
         for i in range(len(self.symbols)):
             if(self.symbols[i][0] == "FUNC" or self.symbols[i][0] == "PROC"):
                 if(linha[0] == self.symbols[i][1]):
@@ -177,8 +204,6 @@ class Semantic():
                         varTipagem.append(self.symbols[i][j-1])
                     if(len(variaveisChamada) != len(varDeclaracao)):
                         raise Exception('Semantic error (declaration has {} arguments but {} arguments was given) in line {}'.format(len(varDeclaracao),len(variaveisChamada),linha[len(linha)-1]))
-                    #variáveis da chamada a partir do indice 1 até o indice tamanho - 2
-                    #variaveis na self.symbols começam a partir do indice i=7 e o tipo é definido em i-1, pulando de 6 em 6 a cada nova variável
                     else:
                         tipagemChamada = []
                         for j in range(len(variaveisChamada)):
@@ -202,6 +227,7 @@ class Semantic():
         if(not flag):
              raise Exception('Semantic error (variable not declared in the function scope) in line {}'.format(linha[len(linha)-1])) 
 
+    #valida IF
     def escopoIF(self,indice,aux):
         var = aux.copy()
         i = indice+1
@@ -239,6 +265,7 @@ class Semantic():
                 self.escopoCALL(self.symbols[i],var)
             i+=1
 
+    #valida ELSE
     def escopoELSE(self,indice,aux):
         var = aux.copy()
         i = indice+1
@@ -275,6 +302,8 @@ class Semantic():
             elif(self.symbols[i][0].isupper()):
                 self.escopoCALL(self.symbols[i],var)
             i+=1
+
+    #valida WHILE
     def escopoWHILE(self,indice,aux):
         var = aux.copy()
         i = indice+1
@@ -314,6 +343,7 @@ class Semantic():
                 self.escopoCALL(self.symbols[i],var)
             i+=1
 
+    #valida PRINT e RETURN
     def escopoPRINTeRETURN(self,linha,var,tipo):
         tipagem = ["INTEGER","BOOLEAN"]
         if(tipo == 0):
@@ -354,6 +384,7 @@ class Semantic():
                         return False
         return True
 
+    #confere a checagem da variável com a atribuição que está sendo feita
     def varChecagem(self,var,vetorVariaveis):
         varAux = var.copy()
         vetorAux = vetorVariaveis.copy()
@@ -432,6 +463,7 @@ class Semantic():
                                     if((tipo == "INTEGER" and self.symbols[j][1] == "BOOLEAN") or tipo == "BOOLEAN" and self.symbols[j][1] != "BOOLEAN"):
                                         raise Exception('Semantic erro (variable and function return of different types) in line {}'.format(varAux[len(varAux)-1]))
 
+    #checa se a expressão condiz com os parâmetros e tipo da expressão
     def checkExpression(self,expressao,linha,variaveis):
         expressao = expressao.replace(" ","")
         aritmetic = ["+","-","*","/"]
