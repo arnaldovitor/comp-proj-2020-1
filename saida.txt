@@ -1,0 +1,125 @@
+1: functeste := 0
+2: POTENCIA:
+3: 	BeginFunc
+4: 		auxiliar := variavel
+5: 		print variavel
+6: 		return 1
+7: 	EndFunc
+8: DIVIDIREPRINTAR:
+9: 	BeginFunc
+10: 		auxiliar := valor/2
+11: 		print auxiliar
+12: 		print 1
+13: 		print True
+14: 	EndFunc
+15: L0:
+16: 	T0 :=3>5
+17: 	if !T0 go to 39
+18: 		T1 :=3<5
+19: 		if !T1 go to 29
+20: 			auxiliar := 0
+21: 			T2 :=functeste<auxiliar
+22: 			if !T2 go to 29
+23: 				teste := 1
+24: 				T3 :=True
+25: 				if !T3 go to 27
+26: 					testando := True
+27: 				if T3 go to 29
+28: 					print 1
+29: 		if T1 go to 31
+30: 			auxiliar := 3*2
+31: 		L4:
+32: 			T4 :=True
+33: 			if !T4 go to 36
+34: 				print True
+35: 				go to 33
+36: 		print 1
+37: 		continue
+38: 		go to 17
+39: param 0
+40: param 1
+41: carambola := call POTENCIA,2
+42: carambola := 1
+43: param True
+44: param 1
+45: param carambola
+46: call DIVIDIREPRINTAR,3
+47: NOVA:
+48: 	BeginFunc
+49: 		print 1
+50: 		print True
+51: 		print 3
+52: 		return 1
+53: 	EndFunc
+54: ALA:
+55: 	BeginFunc
+56: 		print 1
+57: 	EndFunc
+58: param 
+59: novoteste := call NOVA,1
+60: ab := True
+61: ba := False
+62: teste := carambola==functeste
+63: 1: functeste := 0
+2: POTENCIA:
+3: 	BeginFunc
+4: 		auxiliar := variavel
+5: 		print variavel
+6: 		return 1
+7: 	EndFunc
+8: DIVIDIREPRINTAR:
+9: 	BeginFunc
+10: 		auxiliar := valor/2
+11: 		print auxiliar
+12: 		print 1
+13: 		print True
+14: 	EndFunc
+15: L0:
+16: 	T0 :=3>5
+17: 	if !T0 go to 39
+18: 		T1 :=3<5
+19: 		if !T1 go to 29
+20: 			auxiliar := 0
+21: 			T2 :=functeste<auxiliar
+22: 			if !T2 go to 29
+23: 				teste := 1
+24: 				T3 :=True
+25: 				if !T3 go to 27
+26: 					testando := True
+27: 				if T3 go to 29
+28: 					print 1
+29: 		if T1 go to 31
+30: 			auxiliar := 3*2
+31: 		L4:
+32: 			T4 :=True
+33: 			if !T4 go to 36
+34: 				print True
+35: 				go to 33
+36: 		print 1
+37: 		continue
+38: 		go to 17
+39: param 0
+40: param 1
+41: carambola := call POTENCIA,2
+42: carambola := 1
+43: param True
+44: param 1
+45: param carambola
+46: call DIVIDIREPRINTAR,3
+47: NOVA:
+48: 	BeginFunc
+49: 		print 1
+50: 		print True
+51: 		print 3
+52: 		return 1
+53: 	EndFunc
+54: ALA:
+55: 	BeginFunc
+56: 		print 1
+57: 	EndFunc
+58: param 
+59: novoteste := call NOVA,1
+60: ab := True
+61: ba := False
+62: teste := carambola==functeste
+63: 

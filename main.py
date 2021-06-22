@@ -25,17 +25,19 @@ if __name__ == "__main__":
     parser.start()
 
     SymbolsTable = parser.symbols
+    print()
     for i in range(len(SymbolsTable)):
         print(SymbolsTable[i])
 
-    print()
     SymbolsSemantic = parser.symbolsSemantic
-    for i in range(len(SymbolsSemantic)):
-        print(SymbolsSemantic[i])
-    print()
     
     semantic = Semantic(SymbolsSemantic)
     semantic.start()
 
+    print()
     conversor = Conversor(SymbolsSemantic)
     conversor.start()
+
+    documento = open("saida.txt","a")
+    documento.write(conversor.string)
+    documento.close()

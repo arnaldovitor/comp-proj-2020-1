@@ -109,8 +109,6 @@ class Conversor:
             self.string +="{}: ".format(self.linha[len(self.linha)-1]+1)+ identacao*"\t"+"{} := call {},{}\n".format(linha[2],temp[0],len(parametros))
             self.linha.append(self.linha[len(self.linha)-1]+1)
         else:
-            print("entrou",self.symbols[i])
-            print(self.linha[len(self.linha)-1]+1)
             self.string +="{}: ".format(self.linha[len(self.linha)-1]+1)+ identacao*"\t"+"{} := {}\n".format(linha[2],linha[3])
             self.linha.append(self.linha[len(self.linha)-1]+1)
         return i
@@ -189,7 +187,7 @@ class Conversor:
         i+=1
         while(i<len(self.symbols)):
             if(self.symbols[i][0] == "END WHILE"):
-                self.string += "{}: ".format(self.linha[len(self.linha)-1]+1)+identacao*"\t"+"go to {}\n".format(aux)
+                self.string += "{}: ".format(self.linha[len(self.linha)-1]+1)+identacao*"\t"+"go to {}\n".format(aux+1)
                 break
             elif(self.symbols[i][0] == "IF"):
                 i = self.codIF(i,identacao)
@@ -208,7 +206,7 @@ class Conversor:
                 i = self.codCALL(i,identacao)
             i+= 1
         identacao -= 2
-        self.string = self.string.replace(goto,str(self.linha[len(self.linha)-1]+1))
+        self.string = self.string.replace(goto,str(self.linha[len(self.linha)-1]+2))
         self.linha.append(self.linha[len(self.linha)-1]+1)
         return i
 
